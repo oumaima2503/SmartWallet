@@ -12,6 +12,24 @@ A personal finance manager.
 
 PostgreSQL hosted on [Neon](https://neon.tech). Create a project on Neon, copy the connection string and put it in `backend/.env` as `DATABASE_URL`.
 
+Create the tables and add the demo data:
+
+```
+cd backend
+npm run db:migrate
+npm run db:seed
+```
+
+Warning: `db:seed` empties all tables before inserting the demo data.
+
+The seed adds:
+
+- default income and expense categories
+- a demo user: `yassine@smartwallet.test` / `Demo1234!` (currency MAD)
+- transactions for the last 3 months
+- an overall monthly budget (4000 MAD) and category budgets (Groceries 1500, Transportation 600)
+- 2 savings goals with contributions
+
 ## Run locally
 
 Backend:
