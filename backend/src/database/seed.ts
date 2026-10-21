@@ -133,7 +133,7 @@ async function seed() {
     // Start from empty tables
     await client.query(`
       TRUNCATE ai_reports, savings_contributions, savings_goals, budgets,
-        transactions, receipts, categories, users RESTART IDENTITY CASCADE
+        transactions, receipts, categories, refresh_tokens, users RESTART IDENTITY CASCADE
     `);
 
     // Default categories

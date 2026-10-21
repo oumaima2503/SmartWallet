@@ -10,6 +10,18 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- only a hash of the token is stored, never the token itself
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(255) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  revoked_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS refresh_tokens_user ON refresh_tokens (user_id);
+
 -- user_id NULL = default category shared by everyone
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
