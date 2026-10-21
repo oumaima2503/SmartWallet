@@ -8,6 +8,10 @@ A personal finance manager.
 - `backend/` : Express.js (TypeScript), port 4000
 - `ai-service/` : Flask (Python), port 5000
 
+## Database
+
+PostgreSQL hosted on [Neon](https://neon.tech). Create a project on Neon, copy the connection string and put it in `backend/.env` as `DATABASE_URL`.
+
 ## Run locally
 
 Backend:
@@ -42,4 +46,5 @@ npm run dev
 Health checks:
 
 - http://localhost:4000/api/health
+- http://localhost:4000/api/health/db
 - http://localhost:5000/health
