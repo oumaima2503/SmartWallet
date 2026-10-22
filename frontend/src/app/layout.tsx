@@ -1,20 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import Sidebar from "@/components/layout/Sidebar";
+import { FeedbackProvider } from "@/components/ui/Feedback";
+import { CurrencyProvider } from "@/lib/currency";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "SmartWallet",
-  description: "Personal finance manager",
+  description: "AI-powered personal finance manager",
 };
 
 export default function RootLayout({
@@ -24,10 +22,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${jakarta.variable} antialiased`}>
+        <FeedbackProvider>
+          <CurrencyProvider>
+            <div className="min-h-screen lg:flex">
+              <Sidebar />
+              <div className="min-w-0 flex-1">{children}</div>
+            </div>
+          </CurrencyProvider>
+        </FeedbackProvider>
       </body>
     </html>
   );
