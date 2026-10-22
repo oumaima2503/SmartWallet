@@ -47,7 +47,7 @@ export default function UploadZone({ onFile }: Props) {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
-        className={`flex flex-col items-center rounded-3xl border-2 border-dashed px-6 py-14 text-center transition ${
+        className={`flex flex-col items-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${
           dragging ? "border-brand bg-brand-soft" : "border-line bg-white"
         }`}
       >

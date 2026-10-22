@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes } from "react";
 import { LoaderCircle } from "lucide-react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md";
+type Size = "xs" | "sm" | "md";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-brand text-white hover:bg-brand-dark shadow-sm",
@@ -12,6 +12,7 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 const SIZES: Record<Size, string> = {
+  xs: "h-8 px-2.5 text-xs gap-1",
   sm: "h-9 px-3 text-sm gap-1.5",
   md: "h-11 px-4 text-sm gap-2",
 };

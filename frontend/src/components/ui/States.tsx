@@ -14,7 +14,7 @@ type EmptyProps = {
 
 export function EmptyState({ icon: Icon, title, text, action }: EmptyProps) {
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-white px-6 py-12 text-center">
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand">
         <Icon size={26} />
       </span>
