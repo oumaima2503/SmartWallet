@@ -52,12 +52,17 @@ async function uncompleteIfBelowTarget(goalId: number) {
   );
 }
 
-export async function listGoals(req: Request, res: Response) {
+// Also used by the dashboard
+export async function fetchGoals(userId: number) {
   const result = await pool.query<GoalRow>(
     `${GOAL_SELECT} WHERE g.user_id = $1 GROUP BY g.id ORDER BY g.is_completed, g.created_at DESC`,
-    [req.userId]
+    [userId]
   );
-  const goals = result.rows.map(formatGoal);
+  return result.rows.map(formatGoal);
+}
+
+export async function listGoals(req: Request, res: Response) {
+  const goals = await fetchGoals(req.userId!);
 
   const totalSaved = goals.reduce((sum, goal) => sum + goal.saved_amount, 0);
   const totalTarget = goals.reduce((sum, goal) => sum + goal.target_amount, 0);

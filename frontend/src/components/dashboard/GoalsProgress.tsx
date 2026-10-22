@@ -1,0 +1,71 @@
+"use client";
+
+import Link from "next/link";
+import Card from "@/components/ui/Card";
+import { useCurrency } from "@/lib/currency";
+import { DashboardData } from "@/types/dashboard";
+
+// Small progress ring for each goal
+function Ring({ percent, done }: { percent: number; done: boolean }) {
+  const radius = 15;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <svg viewBox="0 0 36 36" className="h-10 w-10 shrink-0 -rotate-90" aria-hidden="true">
+      <circle cx="18" cy="18" r={radius} fill="none" stroke="#eef2ef" strokeWidth="4" />
+      <circle
+        cx="18"
+        cy="18"
+        r={radius}
+        fill="none"
+        stroke={done ? "#0a8f4f" : "#0ea5e9"}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray={`${(percent / 100) * circumference} ${circumference}`}
+      />
+    </svg>
+  );
+}
+
+export default function GoalsProgress({ savings }: { savings: DashboardData["savings"] }) {
+  const { money } = useCurrency();
+
+  return (
+    <Card
+      title="Savings goals"
+      className="h-full"
+      action={
+        <Link href="/goals" className="font-medium text-brand hover:underline">
+          View all
+        </Link>
+      }
+    >
+      <p className="mb-3 rounded-xl bg-brand-soft px-3 py-2 text-xs text-brand-dark">
+        <span className="font-semibold">{money(savings.saved_this_month)}</span> saved this month ·{" "}
+        {money(savings.total_saved)} in total
+      </p>
+
+      {savings.goals.length === 0 ? (
+        <p className="flex flex-1 items-center justify-center py-4 text-sm text-muted">No savings goals yet.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {savings.goals.map((goal) => (
+            <li key={goal.id} className="flex items-center gap-3">
+              <div className="relative">
+                <Ring percent={goal.progress_percent} done={goal.target_reached} />
+                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-ink">
+                  {Math.round(goal.progress_percent)}%
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">{goal.name}</p>
+                <p className="truncate text-[11px] text-muted">
+                  {money(goal.saved_amount)} of {money(goal.target_amount)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}

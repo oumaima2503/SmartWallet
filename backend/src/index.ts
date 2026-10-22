@@ -3,6 +3,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db";
 import savingsGoalsRouter from "./routes/savingsGoals";
+import dashboardRouter from "./routes/dashboard";
+import categoriesRouter from "./routes/categories";
+import receiptsRouter from "./routes/receipts";
+import reportsRouter from "./routes/reports";
+import { currencyRouter, usersRouter } from "./routes/users";
 
 dotenv.config();
 
@@ -39,6 +44,12 @@ app.get("/api/health/db", async (_req, res) => {
 });
 
 app.use("/api/savings-goals", savingsGoalsRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/categories", categoriesRouter);
+app.use("/api/receipts", receiptsRouter);
+app.use("/api/reports", reportsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/currency", currencyRouter);
 
 // Catches errors thrown in any route
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {

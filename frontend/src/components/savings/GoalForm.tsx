@@ -1,6 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Button from "@/components/ui/Button";
+import Field from "@/components/ui/Field";
+import { todayString } from "@/lib/format";
+import { useCurrency } from "@/lib/currency";
 
 export type GoalFormValues = {
   name: string;
@@ -12,90 +16,83 @@ type Props = {
   initial?: GoalFormValues;
   submitLabel: string;
   onSubmit: (values: GoalFormValues) => Promise<void>;
-  onCancel?: () => void;
+  onCancel: () => void;
 };
 
+type Errors = Partial<Record<"name" | "target_amount" | "form", string>>;
+
 export default function GoalForm({ initial, submitLabel, onSubmit, onCancel }: Props) {
+  const { convert, toBase, symbol } = useCurrency();
+  // The target is shown and typed in the chosen currency
+  const initialShown = initial ? String(Math.round(convert(initial.target_amount) * 100) / 100) : "";
   const [name, setName] = useState(initial?.name ?? "");
-  const [targetAmount, setTargetAmount] = useState(initial ? String(initial.target_amount) : "");
+  const [targetAmount, setTargetAmount] = useState(initialShown);
   const [targetDate, setTargetDate] = useState(initial?.target_date ?? "");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setError("");
 
     const amount = Number(targetAmount);
-    if (!name.trim()) return setError("Please enter a name.");
-    if (!amount || amount <= 0) return setError("The target amount must be greater than 0.");
+    const newErrors: Errors = {};
+    if (!name.trim()) newErrors.name = "Give your goal a name.";
+    if (!targetAmount || !(amount > 0)) newErrors.target_amount = "Enter an amount greater than 0.";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     setSaving(true);
     try {
-      await onSubmit({ name: name.trim(), target_amount: amount, target_date: targetDate || null });
-      if (!initial) {
-        setName("");
-        setTargetAmount("");
-        setTargetDate("");
-      }
+      // Unchanged value: keep the exact stored amount (avoids rounding drift between currencies)
+      const targetMad = initial && targetAmount === initialShown ? initial.target_amount : toBase(amount);
+      await onSubmit({ name: name.trim(), target_amount: targetMad, target_date: targetDate || null });
     } catch (err) {
-      setError((err as Error).message);
-    } finally {
+      setErrors({ form: (err as Error).message });
       setSaving(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="block text-sm">
-          <span className="text-slate-600">Name</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="New laptop"
-            maxLength={100}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-emerald-500"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-slate-600">Target amount</span>
-          <input
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
-            placeholder="8000"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-emerald-500"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-slate-600">Target date (optional)</span>
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-emerald-500"
-          />
-        </label>
-      </div>
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <Field
+        label="Goal name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="e.g. New laptop, Vacation, Emergency fund"
+        maxLength={100}
+        error={errors.name}
+      />
+      <Field
+        label="Target amount"
+        type="number"
+        inputMode="decimal"
+        min="0.01"
+        step="0.01"
+        value={targetAmount}
+        onChange={(e) => setTargetAmount(e.target.value)}
+        placeholder="8000"
+        suffix={symbol}
+        error={errors.target_amount}
+      />
+      <Field
+        label="Target date"
+        optional
+        type="date"
+        min={initial ? undefined : todayString()}
+        value={targetDate}
+        onChange={(e) => setTargetDate(e.target.value)}
+        hint="We'll tell you how much to save each month to get there."
+      />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {errors.form && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{errors.form}</p>}
 
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : submitLabel}
-        </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
-            Cancel
-          </button>
-        )}
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={saving}>
+          {submitLabel}
+        </Button>
       </div>
     </form>
   );
