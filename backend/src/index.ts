@@ -12,6 +12,7 @@ import categoriesRouter from "./routes/categories";
 import receiptsRouter from "./routes/receipts";
 import reportsRouter from "./routes/reports";
 import transactionsRouter from "./routes/transactions";
+import budgetsRouter from "./routes/budgets";
 
 import { requireTrustedOrigin } from "./middleware/csrf";
 import { currencyRouter, usersRouter } from "./routes/users";
@@ -91,7 +92,7 @@ app.use("/api/reports", reportsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/currency", currencyRouter);
 app.use("/api/transactions", transactionsRouter);
-
+app.use("/api/budgets", budgetsRouter);
 
 // 8. Global error handler
 app.use(
