@@ -11,6 +11,7 @@ import dashboardRouter from "./routes/dashboard";
 import categoriesRouter from "./routes/categories";
 import receiptsRouter from "./routes/receipts";
 import reportsRouter from "./routes/reports";
+import transactionsRouter from "./routes/transactions";
 
 import { requireTrustedOrigin } from "./middleware/csrf";
 import { currencyRouter, usersRouter } from "./routes/users";
@@ -89,6 +90,8 @@ app.use("/api/receipts", receiptsRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/currency", currencyRouter);
+app.use("/api/transactions", transactionsRouter);
+
 
 // 8. Global error handler
 app.use(
