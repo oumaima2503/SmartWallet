@@ -1,39 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Briefcase,
-  Bus,
-  CircleDollarSign,
-  Clapperboard,
-  Gift,
-  HeartPulse,
-  House,
-  Laptop,
-  LucideIcon,
-  Receipt,
-  ShoppingBag,
-  ShoppingCart,
-  UtensilsCrossed,
-} from "lucide-react";
 import Card from "@/components/ui/Card";
+import { categoryIcon } from "@/lib/categoryIcons";
 import { useCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/format";
 import { RecentTransaction } from "@/types/dashboard";
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  Groceries: ShoppingCart,
-  Transportation: Bus,
-  Housing: House,
-  Entertainment: Clapperboard,
-  Shopping: ShoppingBag,
-  Healthcare: HeartPulse,
-  Bills: Receipt,
-  Restaurants: UtensilsCrossed,
-  Salary: Briefcase,
-  Freelance: Laptop,
-  Gifts: Gift,
-};
 
 export default function RecentTransactions({ transactions }: { transactions: RecentTransaction[] }) {
   const { money } = useCurrency();
@@ -54,7 +26,7 @@ export default function RecentTransactions({ transactions }: { transactions: Rec
         // About 4 rows visible, the rest scrolls
         <ul className="thin-scroll -mx-2 max-h-[14.5rem] overflow-y-auto px-2" tabIndex={0} aria-label="Recent transactions">
           {transactions.map((transaction) => {
-            const Icon = CATEGORY_ICONS[transaction.category] ?? CircleDollarSign;
+            const Icon = categoryIcon(transaction.category);
             const isIncome = transaction.type === "income";
             return (
               <li key={transaction.id} className="flex items-center gap-3 rounded-xl px-1.5 py-2 transition hover:bg-background">

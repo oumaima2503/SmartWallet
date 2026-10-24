@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 // Every amount is stored in MAD. The chosen currency only changes how amounts are shown and typed:
 // shown amounts are converted from MAD, typed amounts are converted back to MAD before saving.
@@ -50,16 +51,19 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>("MAD");
   const [rates, setRates] = useState<Rates | null>(null);
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    // Last choice from this browser first (no flash), then the saved profile value
+    // Last choice from this browser first (no flash); the profile value wins once logged in
     setCurrencyState(readStoredCurrency());
-    api<{ currency: string }>("/api/users/me")
-      .then((user) => user.currency in CURRENCIES && setCurrencyState(user.currency as Currency))
-      .catch(() => {});
     api<Rates>("/api/currency/rates")
       .then(setRates)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (user && user.currency in CURRENCIES) setCurrencyState(user.currency as Currency);
+  }, [user]);
 
   useEffect(() => {
     try {

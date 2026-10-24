@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
+import AppShell from "@/components/layout/AppShell";
 import { FeedbackProvider } from "@/components/ui/Feedback";
 import { CurrencyProvider } from "@/lib/currency";
+import { AuthProvider } from "@/lib/auth";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -24,12 +25,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jakarta.variable} antialiased`}>
         <FeedbackProvider>
-          <CurrencyProvider>
-            <div className="min-h-screen lg:flex">
-              <Sidebar />
-              <div className="min-w-0 flex-1">{children}</div>
-            </div>
-          </CurrencyProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <AppShell>{children}</AppShell>
+            </CurrencyProvider>
+          </AuthProvider>
         </FeedbackProvider>
       </body>
     </html>

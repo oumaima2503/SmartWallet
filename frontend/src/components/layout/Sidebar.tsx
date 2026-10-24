@@ -12,10 +12,12 @@ import {
   PiggyBank,
   ScanLine,
   Target,
+  LogOut,
   Wallet,
   X,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { useFeedback } from "@/components/ui/Feedback";
 import CurrencySwitch from "./CurrencySwitch";
 
 type NavLink = { href: string; label: string; short: string; icon: LucideIcon };
@@ -67,13 +69,29 @@ function Avatar({ user, size = "h-9 w-9" }: { user: User | null; size?: string }
 
 function UserCard({ user }: { user: User | null }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl p-2">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl p-2">
       <Avatar user={user} />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-ink">{user?.name ?? "..."}</p>
         <p className="truncate text-xs text-muted">{user?.email ?? ""}</p>
       </div>
     </div>
+  );
+}
+
+function LogoutButton({ onLogout, label = false }: { onLogout: () => void; label?: boolean }) {
+  return (
+    <button
+      onClick={onLogout}
+      aria-label="Log out"
+      title="Log out"
+      className={`flex shrink-0 items-center justify-center gap-2 rounded-xl text-sm font-medium text-muted transition hover:bg-red-50 hover:text-red-600 ${
+        label ? "h-10 w-full border border-line" : "h-9 w-9"
+      }`}
+    >
+      <LogOut size={17} />
+      {label && "Log out"}
+    </button>
   );
 }
 
@@ -132,16 +150,17 @@ function ScanButton({ active, onClick }: { active: boolean; onClick?: () => void
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
+  const { toast } = useFeedback();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  useEffect(() => {
-    api<User>("/api/users/me")
-      .then(setUser)
-      .catch(() => {});
-  }, []);
+  async function handleLogout() {
+    setDrawerOpen(false);
+    await logout();
+    toast.success("You are logged out.");
+  }
 
   // Close the phone menu when the page changes, and with Escape
   useEffect(() => setDrawerOpen(false), [pathname]);
@@ -177,7 +196,10 @@ export default function Sidebar() {
             <span className="text-xs font-medium text-muted">Currency</span>
             <CurrencySwitch />
           </div>
-          <UserCard user={user} />
+          <div className="flex items-center justify-between gap-1">
+            <UserCard user={user} />
+            <LogoutButton onLogout={handleLogout} />
+          </div>
         </div>
       </aside>
 
@@ -223,9 +245,12 @@ export default function Sidebar() {
               <NavGroups isActive={isActive} onNavigate={() => setDrawerOpen(false)} />
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
-              <span className="text-xs font-medium text-muted">Currency</span>
-              <CurrencySwitch />
+            <div className="space-y-3 border-t border-line pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted">Currency</span>
+                <CurrencySwitch />
+              </div>
+              <LogoutButton onLogout={handleLogout} label />
             </div>
           </div>
         </div>
