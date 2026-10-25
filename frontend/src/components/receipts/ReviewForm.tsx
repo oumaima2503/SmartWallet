@@ -1,12 +1,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ArrowRightLeft, Check, ChevronDown, Sparkles } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { todayString } from "@/lib/format";
-import { CURRENCIES, Currency, useCurrency } from "@/lib/currency";
+import { Currency, useCurrency } from "@/lib/currency";
 import { Category, ReceiptExtraction } from "@/types/receipts";
+import { t } from "@/lib/i18n";
 
 export type ReviewValues = {
   merchant: string;
@@ -33,26 +34,29 @@ function toBaseFrom(amount: number, rate: number) {
 // Message for a value read by the AI: missing, uncertain, or fine
 function checkMessage(extraction: ReceiptExtraction | null, field: "merchant" | "date" | "total_amount") {
   if (!extraction) return undefined;
-  if (extraction.missing_fields.includes(field)) return "Not found on the receipt. Please fill it in.";
-  if (extraction.confidence[field] === "low") return "Hard to read. Please check this value.";
+  if (extraction.missing_fields.includes(field)) return t("Not found on the receipt. Please fill it in.");
+  if (extraction.confidence[field] === "low") return t("Hard to read. Please check this value.");
   return undefined;
 }
 
 export default function ReviewForm({ extraction, categories, onSubmit, onCancel }: Props) {
-  const { currency, rates, convert, toBase, symbol } = useCurrency();
+  const { currency, rates, money } = useCurrency();
 
-  // The receipt total is in the receipt's currency (MAD when unknown). Convert it to MAD,
-  // then show it in the chosen currency. Unsupported currencies are left for the user to convert.
-  const receiptCurrency = extraction?.currency ?? "MAD";
-  const supported = receiptCurrency in CURRENCIES && !!rates;
+  // The total is shown EXACTLY as printed on the receipt, in the receipt's currency.
+  // It is converted to MAD (the storage currency) only when saving; the conversion is shown live.
+  const receiptCurrency = (extraction?.currency ?? "MAD").toUpperCase();
   const receiptTotal = extraction?.total_amount ?? null;
-  const totalMad =
-    receiptTotal === null ? null : supported ? toBaseFrom(receiptTotal, rates!.rates[receiptCurrency as Currency]) : receiptTotal;
-  const initialShown = totalMad === null ? "" : String(Math.round(convert(totalMad) * 100) / 100);
+
+  // "1 MAD = rate units" for any currency we know
+  const rateOf = (code: string) => (code === "MAD" ? 1 : rates?.all?.[code] ?? rates?.rates[code as Currency]);
+  const knownReceiptCurrency = !!rateOf(receiptCurrency);
+  // Currencies the user can pick for the total: the receipt's one first, then the usual ones
+  const currencyOptions = [...new Set([receiptCurrency, "MAD", "EUR", "USD"])];
 
   const [merchant, setMerchant] = useState(extraction?.merchant ?? "");
   const [date, setDate] = useState(extraction?.date ?? todayString());
-  const [amount, setAmount] = useState(initialShown);
+  const [amount, setAmount] = useState(receiptTotal !== null ? String(receiptTotal) : "");
+  const [entryCurrency, setEntryCurrency] = useState(receiptCurrency);
   const [categoryId, setCategoryId] = useState(extraction?.suggested_category_id ? String(extraction.suggested_category_id) : "");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -61,56 +65,98 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
 
   const suggestedId = extraction?.suggested_category_id ?? null;
   const usingSuggestion = suggestedId !== null && Number(categoryId) === suggestedId;
-  const converted = receiptCurrency !== currency && supported && receiptTotal !== null;
-  const unsupportedCurrency = extraction?.currency && !(extraction.currency in CURRENCIES) ? extraction.currency : null;
+
+  const value = Number(amount);
+  const entryRate = rateOf(entryCurrency);
+  const amountMad = value > 0 && entryRate ? toBaseFrom(value, entryRate) : null;
+  const asPrinted = receiptTotal !== null && value === receiptTotal && entryCurrency === receiptCurrency;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const value = Number(amount);
     const newErrors: Errors = {};
-    if (!amount || !(value > 0)) newErrors.amount = "Enter the total amount paid.";
-    if (!date) newErrors.date = "Enter the purchase date.";
-    else if (date > todayString()) newErrors.date = "The date can't be in the future.";
-    if (!categoryId) newErrors.category = "Choose a category.";
+    if (!amount || !(value > 0)) newErrors.amount = t("Enter the total amount paid.");
+    else if (amountMad === null) newErrors.amount = t("No exchange rate for {currency}. Choose another currency.", { currency: entryCurrency });
+    if (!date) newErrors.date = t("Enter the purchase date.");
+    else if (date > todayString()) newErrors.date = t("The date can't be in the future.");
+    if (!categoryId) newErrors.category = t("Choose a category.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     setSaving(true);
     try {
-      await onSubmit({ merchant: merchant.trim(), date, amount: totalMad !== null && amount === initialShown ? totalMad : toBase(value), category_id: Number(categoryId), description: description.trim() });
+      await onSubmit({ merchant: merchant.trim(), date, amount: amountMad!, category_id: Number(categoryId), description: description.trim() });
     } catch (err) {
       setErrors({ form: (err as Error).message });
       setSaving(false);
     }
   }
 
+  const totalWarning = checkMessage(extraction, "total_amount");
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <Field
-        label="Store / merchant"
+        label={t("Store / merchant")}
         optional
         value={merchant}
         onChange={(e) => setMerchant(e.target.value)}
         maxLength={150}
-        placeholder="e.g. Marjane"
+        placeholder={t("e.g. Marjane")}
         warning={checkMessage(extraction, "merchant")}
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* Total + its currency, exactly as on the receipt */}
+        <div>
+          <label htmlFor="receipt-total" className="mb-1.5 flex items-center justify-between text-sm font-medium text-ink">
+            Total paid
+            {asPrinted && (
+              <span className="flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand-dark">
+                <Check size={11} /> {t("As printed")}
+              </span>
+            )}
+          </label>
+          <div
+            className={`flex h-11 overflow-hidden rounded-xl border bg-white transition focus-within:ring-4 ${
+              errors.amount
+                ? "border-red-400 focus-within:ring-red-100"
+                : totalWarning
+                  ? "border-amber-400 focus-within:ring-amber-100"
+                  : "border-line focus-within:border-brand focus-within:ring-brand/15"
+            }`}
+          >
+            <input
+              id="receipt-total"
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              aria-invalid={!!errors.amount}
+              className="min-w-0 flex-1 px-3 text-sm font-semibold text-ink outline-none"
+            />
+            <select
+              value={entryCurrency}
+              onChange={(e) => setEntryCurrency(e.target.value)}
+              aria-label={t("Currency of the total")}
+              className="border-s border-line bg-background/60 px-2 text-xs font-semibold text-ink outline-none"
+            >
+              {currencyOptions.map((code) => (
+                <option key={code} value={code} disabled={!rateOf(code) && code !== entryCurrency}>
+                  {code}
+                </option>
+              ))}
+            </select>
+          </div>
+          {errors.amount ? (
+            <p className="mt-1.5 text-xs text-red-600">{errors.amount}</p>
+          ) : totalWarning ? (
+            <p className="mt-1.5 text-xs text-amber-700">{totalWarning}</p>
+          ) : null}
+        </div>
         <Field
-          label="Total paid"
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="0.01"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          suffix={symbol}
-          error={errors.amount}
-          warning={checkMessage(extraction, "total_amount")}
-        />
-        <Field
-          label="Purchase date"
+          label={t("Purchase date")}
           type="date"
           max={todayString()}
           value={date}
@@ -120,14 +166,20 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
         />
       </div>
 
-      {converted && (
-        <p className="rounded-xl bg-sky-50 p-3 text-xs text-sky-800">
-          Converted from {receiptTotal!.toLocaleString("fr-FR")} {receiptCurrency} on the receipt, at today&apos;s rate.
+      {/* Live conversion: what will actually be saved */}
+      {amountMad !== null && entryCurrency !== "MAD" && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-sky-50 px-3 py-2.5 text-xs text-sky-900">
+          <ArrowRightLeft size={14} className="shrink-0" />
+          <span>
+            {value.toLocaleString("en-US")} {entryCurrency} ={" "}
+            <span className="font-bold">{amountMad.toLocaleString("en-US")} MAD</span> will be saved
+            {currency !== "MAD" && currency !== entryCurrency && <> (≈ {money(amountMad)})</>}, at today&apos;s rate.
+          </span>
         </p>
       )}
-      {unsupportedCurrency && (
+      {rates && !knownReceiptCurrency && extraction?.currency && (
         <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
-          This receipt seems to be in {unsupportedCurrency}. Please convert the total to {symbol} before saving.
+          We have no exchange rate for {receiptCurrency}. Choose the currency you paid in, or enter the total in MAD.
         </p>
       )}
 
@@ -137,7 +189,7 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
           {usingSuggestion && (
             <span className="flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
               <Sparkles size={12} />
-              AI suggestion
+              {t("AI suggestion")}
             </span>
           )}
         </label>
@@ -150,10 +202,10 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
             errors.category ? "border-red-400 focus:ring-red-100" : "border-line focus:border-brand focus:ring-brand/15"
           }`}
         >
-          <option value="">Choose a category</option>
+          <option value="">{t("Choose a category")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.name}
+              {t(category.name)}
             </option>
           ))}
         </select>
@@ -166,12 +218,12 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
       </div>
 
       <Field
-        label="Description"
+        label={t("Description")}
         optional
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         maxLength={255}
-        placeholder="e.g. Weekly groceries"
+        placeholder={t("e.g. Weekly groceries")}
       />
 
       {extraction && (extraction.items.length > 0 || extraction.raw_text) && (
@@ -182,7 +234,7 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
             aria-expanded={showDetails}
             className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-ink"
           >
-            What we read on the receipt
+            {t("What we read on the receipt")}
             <ChevronDown size={16} className={`text-muted transition ${showDetails ? "rotate-180" : ""}`} />
           </button>
           {showDetails && (
@@ -192,7 +244,7 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
                   {extraction.items.map((item, i) => (
                     <li key={i} className="flex justify-between gap-3 text-ink">
                       <span className="truncate">{item.name}</span>
-                      <span className="shrink-0 text-muted">{item.price !== null ? `${item.price.toLocaleString("fr-FR")} ${receiptCurrency}` : "-"}</span>
+                      <span className="shrink-0 text-muted">{item.price !== null ? `${item.price.toLocaleString("en-US")} ${receiptCurrency}` : "-"}</span>
                     </li>
                   ))}
                 </ul>
@@ -209,10 +261,10 @@ export default function ReviewForm({ extraction, categories, onSubmit, onCancel 
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Discard
+          {t("Discard")}
         </Button>
         <Button type="submit" loading={saving}>
-          Add expense
+          {t("Add expense")}
         </Button>
       </div>
     </form>

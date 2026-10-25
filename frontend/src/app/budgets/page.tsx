@@ -16,6 +16,9 @@ import { useFeedback } from "@/components/ui/Feedback";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import MonthPicker from "@/components/dashboard/MonthPicker";
 import BudgetForm, { BudgetFormValues } from "@/components/budgets/BudgetForm";
+import Hero from "@/components/ui/Hero";
+import Amount from "@/components/ui/Amount";
+import { t } from "@/lib/i18n";
 
 type Status = "ok" | "warning" | "exceeded";
 
@@ -84,7 +87,7 @@ export default function BudgetsPage() {
   useEffect(() => {
     api<Category[]>("/api/categories?type=expense")
       .then(setCategories)
-      .catch(() => toast.error("Could not load your categories."));
+      .catch(() => toast.error(t("Could not load your categories.")));
   }, [toast]);
 
   const overall = budgets?.find((b) => b.category_id === null) ?? null;
@@ -96,10 +99,10 @@ export default function BudgetsPage() {
   async function save(values: BudgetFormValues) {
     if (modal?.mode === "edit") {
       await api(`/api/budgets/${modal.budget.id}`, { method: "PATCH", body: JSON.stringify(values) });
-      toast.success("Budget updated.");
+      toast.success(t("Budget updated."));
     } else {
       await api("/api/budgets", { method: "POST", body: JSON.stringify({ ...values, month }) });
-      toast.success("Budget created.");
+      toast.success(t("Budget created."));
     }
     setModal(null);
     await load();
@@ -107,15 +110,15 @@ export default function BudgetsPage() {
 
   async function remove(budget: Budget) {
     const ok = await confirm({
-      title: `Delete the ${budget.category_name ?? "overall"} budget?`,
-      message: `Your expenses stay recorded; only the ${money(Number(budget.amount_limit))} limit for ${formatMonth(month)} is removed.`,
-      confirmLabel: "Delete",
+      title: budget.category_name ? t("Delete the {name} budget?", { name: budget.category_name }) : t("Delete the overall budget?"),
+      message: t("Your expenses stay recorded; only the {amount} limit for {month} is removed.", { amount: money(Number(budget.amount_limit)), month: formatMonth(month) }),
+      confirmLabel: t("Delete"),
       danger: true,
     });
     if (!ok) return;
     try {
       await api(`/api/budgets/${budget.id}`, { method: "DELETE" });
-      toast.success("Budget deleted.");
+      toast.success(t("Budget deleted."));
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -133,7 +136,7 @@ export default function BudgetsPage() {
           body: JSON.stringify({ month, category_id: budget.category_id, amount_limit: budget.amount_limit }),
         });
       }
-      toast.success(`${previous.length} budget${previous.length > 1 ? "s" : ""} copied from ${formatMonth(shiftMonth(month, -1))}.`);
+      toast.success(t(previous.length > 1 ? "{count} budgets copied from {month}." : "{count} budget copied from {month}.", { count: previous.length, month: formatMonth(shiftMonth(month, -1)) }));
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -146,22 +149,22 @@ export default function BudgetsPage() {
 
   return (
     <main className="page">
-      <PageHeader title="Budgets" subtitle="Set monthly limits and see how much is left.">
-        <MonthPicker value={month} onChange={setMonth} />
-        <Button size="sm" onClick={() => setModal({ mode: "add" })} className="h-10 shrink-0">
-          <Plus size={16} />
-          <span className="hidden sm:inline">New budget</span>
+      <PageHeader title={t("Budgets")} subtitle={t("Set monthly limits and see how much is left.")}>
+        <MonthPicker value={month} onChange={setMonth} compact />
+        <Button size="xs" onClick={() => setModal({ mode: "add" })} className="shrink-0">
+          <Plus size={14} />
+          <span className="hidden sm:inline">{t("New budget")}</span>
         </Button>
       </PageHeader>
 
       {error && !budgets && (
         <div className="mt-5">
-          <ErrorState message={`We couldn't load your budgets. ${error}`} onRetry={load} />
+          <ErrorState message={`${t("We couldn't load your budgets.")} ${error}`} onRetry={load} />
         </div>
       )}
 
       {!budgets && !error && (
-        <div className="mt-5 space-y-4">
+        <div className="mt-4 space-y-4">
           <Skeleton className="h-36 rounded-2xl" />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -175,8 +178,9 @@ export default function BudgetsPage() {
         <div className="mt-5">
           <EmptyState
             icon={PiggyBank}
-            title={`No budget for ${formatMonth(month)}`}
-            text="Set an overall limit for the month, then add limits for the categories you want to watch."
+            illustration="budget"
+            title={t("No budget for {month}", { month: formatMonth(month) })}
+            text={t("Set an overall limit for the month, then add limits for the categories you want to watch.")}
             action={
               <div className="flex flex-col gap-2 sm:flex-row">
                 {previousCount > 0 && (
@@ -187,7 +191,7 @@ export default function BudgetsPage() {
                 )}
                 <Button onClick={() => setModal({ mode: "add" })}>
                   <Plus size={18} />
-                  Create a budget
+                  {t("Create a budget")}
                 </Button>
               </div>
             }
@@ -196,20 +200,20 @@ export default function BudgetsPage() {
       )}
 
       {budgets && budgets.length > 0 && (
-        <div className="mt-5 space-y-5">
+        <div className="mt-4 space-y-4">
           {/* Overall budget */}
           {overall ? (
             <OverallCard budget={overall} daysLeft={left} onEdit={() => setModal({ mode: "edit", budget: overall })} onDelete={() => remove(overall)} />
           ) : (
             <button
               onClick={() => setModal({ mode: "add", preset: { category_id: null, amount_limit: 0 } })}
-              className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-line bg-white/60 p-4 text-left transition hover:border-brand hover:bg-brand-soft/40"
+              className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-line bg-white/60 p-4 text-start transition hover:border-brand hover:bg-brand-soft/40"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <Target size={18} />
               </span>
               <span>
-                <span className="block text-sm font-semibold text-ink">Add an overall monthly budget</span>
+                <span className="block text-sm font-semibold text-ink">{t("Add an overall monthly budget")}</span>
                 <span className="block text-xs text-muted">One limit for all your expenses of {formatMonth(month)}.</span>
               </span>
             </button>
@@ -224,9 +228,9 @@ export default function BudgetsPage() {
                 return (
                   <span key={budget.id} className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${STATUS[status].chip}`}>
                     <Icon size={13} />
-                    {budget.category_name ?? "Overall budget"}:{" "}
+                    {budget.category_name ? t(budget.category_name) : t("Overall budget")}:{" "}
                     {status === "exceeded"
-                      ? `${money(-Number(budget.remaining))} over`
+                      ? t("{amount} over", { amount: money(-Number(budget.remaining)) })
                       : `${Math.round(Number(budget.percentage_used))}% used`}
                   </span>
                 );
@@ -236,7 +240,7 @@ export default function BudgetsPage() {
 
           {/* Category budgets */}
           <section>
-            <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Category budgets</h2>
+            <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">{t("Category budgets")}</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {categoryBudgets.map((budget) => (
                 <CategoryBudgetCard
@@ -248,10 +252,12 @@ export default function BudgetsPage() {
               ))}
               <button
                 onClick={() => setModal({ mode: "add" })}
-                className="flex min-h-[132px] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-line bg-white/50 p-4 text-sm transition hover:border-brand hover:bg-brand-soft/40"
+                className="group flex min-h-[148px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-white/50 p-4 text-sm transition hover:border-brand hover:bg-brand-soft/40"
               >
-                <Plus size={18} className="text-brand" />
-                <span className="font-semibold text-ink">Add a category budget</span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand transition group-hover:scale-110 group-hover:bg-brand group-hover:text-white">
+                  <Plus size={20} />
+                </span>
+                <span className="font-semibold text-ink">{t("Add a category")}</span>
               </button>
             </div>
           </section>
@@ -261,7 +267,7 @@ export default function BudgetsPage() {
       {/* Spending without a limit */}
       {budgets && unbudgeted.length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Spending without a budget</h2>
+          <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">{t("Spending without a budget")}</h2>
           <div className="flex flex-wrap gap-2">
             {unbudgeted.map((item) => {
               const Icon = categoryIcon(item.category);
@@ -271,16 +277,16 @@ export default function BudgetsPage() {
                 <button
                   key={item.category_id}
                   onClick={() => setModal({ mode: "add", preset: { category_id: item.category_id, amount_limit: suggestion } })}
-                  className="group flex items-center gap-2 rounded-xl border border-line bg-white py-1.5 pl-2 pr-3 text-xs transition hover:border-brand"
+                  className="group flex items-center gap-2 rounded-xl border border-line bg-white py-1.5 ps-2 pe-3 text-xs transition hover:border-brand"
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-ink/70">
                     <Icon size={14} />
                   </span>
-                  <span className="text-left">
-                    <span className="block font-semibold text-ink">{item.category}</span>
+                  <span className="text-start">
+                    <span className="block font-semibold text-ink">{t(item.category)}</span>
                     <span className="block text-muted">{money(item.total)} spent</span>
                   </span>
-                  <span className="ml-1 font-semibold text-brand group-hover:underline">Set budget</span>
+                  <span className="ms-1 font-semibold text-brand group-hover:underline">{t("Set budget")}</span>
                 </button>
               );
             })}
@@ -290,7 +296,7 @@ export default function BudgetsPage() {
 
       <Modal
         open={!!modal}
-        title={modal?.mode === "edit" ? "Edit budget" : "New budget"}
+        title={modal?.mode === "edit" ? t("Edit budget") : t("New budget")}
         description={formatMonth(month)}
         onClose={() => setModal(null)}
       >
@@ -307,7 +313,7 @@ export default function BudgetsPage() {
                 : undefined
             }
             preset={modal.mode === "add" && modal.preset?.amount_limit ? modal.preset : undefined}
-            submitLabel={modal.mode === "edit" ? "Save changes" : "Create budget"}
+            submitLabel={modal.mode === "edit" ? t("Save changes") : t("Create budget")}
             onSubmit={save}
             onCancel={() => setModal(null)}
           />
@@ -335,30 +341,30 @@ function OverallCard({
   const perDay = daysLeft && remaining > 0 ? remaining / daysLeft : null;
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ink via-[#14382a] to-brand-dark p-5 text-white shadow-lg shadow-ink/10">
-      <div className="pointer-events-none absolute -right-14 -top-16 h-48 w-48 rounded-full bg-white/5" />
+    <Hero tone="dark">
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-white/70">Overall monthly budget</p>
-            <p className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-              {money(Number(budget.spent))}
+            <p className="text-xs text-white/70">{t("Overall monthly budget")}</p>
+            <p className="mt-1">
+              <Amount value={Number(budget.spent)} size="hero" />
               <span className="text-base font-medium text-white/60"> / {money(Number(budget.amount_limit))}</span>
             </p>
           </div>
           <div className="flex gap-1">
-            <button onClick={onEdit} aria-label="Edit overall budget" className="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white">
+            <button onClick={onEdit} aria-label={t("Edit overall budget")} className="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white">
               <Pencil size={16} />
             </button>
-            <button onClick={onDelete} aria-label="Delete overall budget" className="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white">
+            <button onClick={onDelete} aria-label={t("Delete overall budget")} className="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white">
               <Trash2 size={16} />
             </button>
           </div>
         </div>
 
-        <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-white/15">
+        <div className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-white/15">
+          <span className="absolute inset-y-0 start-[80%] w-0.5 bg-white/50" title={t("Alert at 80%")} aria-hidden="true" />
           <div
-            className={`h-full rounded-full transition-all duration-700 ${status === "ok" ? "bg-emerald-400" : status === "warning" ? "bg-amber-400" : "bg-rose-400"}`}
+            className={`fill-in h-full rounded-full transition-all duration-700 ${status === "ok" ? "bg-emerald-400" : status === "warning" ? "bg-amber-400" : "bg-rose-400"}`}
             style={{ width: `${Math.min(used, 100)}%` }}
           />
         </div>
@@ -366,55 +372,90 @@ function OverallCard({
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-full bg-white/15 px-2.5 py-1 font-semibold">{Math.round(used)}% used</span>
           <span className="rounded-full bg-white/15 px-2.5 py-1">
-            {remaining >= 0 ? `${money(remaining)} left` : `${money(-remaining)} over the limit`}
+            {remaining >= 0 ? t("{amount} left", { amount: money(remaining) }) : t("{amount} over the limit", { amount: money(-remaining) })}
           </span>
           {perDay !== null && (
             <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-ink">
-              ≈ {money(Math.floor(perDay))} per day for {daysLeft} day{daysLeft! > 1 ? "s" : ""}
+              ≈ {t(daysLeft! > 1 ? "{amount} per day for {days} days" : "{amount} per day for {days} day", { amount: money(Math.floor(perDay)), days: daysLeft! })}
             </span>
           )}
         </div>
       </div>
-    </section>
+    </Hero>
   );
 }
 
+const RING_COLORS: Record<Status, string> = { ok: "#0a8f4f", warning: "#f59e0b", exceeded: "#f43f5e" };
+const EDGE: Record<Status, string> = { ok: "bg-brand", warning: "bg-amber-400", exceeded: "bg-rose-500" };
+
+// "Envelope" card: colored top edge (status), a small ring with the icon,
+// the money left to spend as the main number, and spent / limit underneath
 function CategoryBudgetCard({ budget, onEdit, onDelete }: { budget: Budget; onEdit: () => void; onDelete: () => void }) {
   const { money } = useCurrency();
   const Icon = categoryIcon(budget.category_name);
   const status = statusOf(budget);
   const used = Number(budget.percentage_used);
   const remaining = Number(budget.remaining);
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
 
   return (
-    <article className="group flex flex-col rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(15,31,23,0.04)] transition hover:shadow-md hover:shadow-slate-900/5">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-ink/70">
-          <Icon size={17} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-ink">{budget.category_name}</h3>
-          <p className="truncate text-xs text-muted">
-            {money(Number(budget.spent))} of {money(Number(budget.amount_limit))}
-          </p>
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(15,31,23,0.04)] transition hover:shadow-md hover:shadow-slate-900/5">
+      <span className={`h-1.5 w-full ${EDGE[status]}`} aria-hidden="true" />
+
+      <div className="flex items-start gap-3 p-4 pb-3">
+        <div
+          className="relative h-14 w-14 shrink-0"
+          role="progressbar"
+          aria-valuenow={Math.round(used)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={t(budget.category_name ?? "")}
+        >
+          <svg viewBox="0 0 48 48" className="h-full w-full -rotate-90">
+            <circle cx="24" cy="24" r={radius} fill="none" stroke="var(--track)" strokeWidth="4.5" />
+            <circle
+              cx="24"
+              cy="24"
+              r={radius}
+              fill="none"
+              stroke={RING_COLORS[status]}
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeDasharray={`${(Math.min(used, 100) / 100) * circumference} ${circumference}`}
+              className="ring-in transition-all duration-700"
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-ink/70">
+            <Icon size={18} />
+          </span>
         </div>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[status].chip}`}>{Math.round(used)}%</span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="truncate text-sm font-semibold text-ink">{t(budget.category_name ?? "")}</h3>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS[status].chip}`}>
+              {t(STATUS[status].label)}
+            </span>
+          </div>
+          <p className={`mt-1 ${status === "exceeded" ? "text-rose-600" : "text-ink"}`}>
+            <Amount value={Math.abs(remaining)} size="card" />
+          </p>
+          <p className="text-[11px] text-muted">{remaining >= 0 ? "left to spend" : "over the limit"}</p>
+        </div>
       </div>
 
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={Math.round(used)} aria-valuemin={0} aria-valuemax={100}>
-        <div className={`h-full rounded-full transition-all duration-700 ${STATUS[status].bar}`} style={{ width: `${Math.min(used, 100)}%` }} />
-      </div>
-
-      <div className="mt-2.5 flex items-center justify-between gap-2">
-        <span className={`text-xs ${status === "exceeded" ? "font-semibold text-rose-600" : "text-muted"}`}>
-          {remaining >= 0 ? `${money(remaining)} left` : `${money(-remaining)} over`} · {STATUS[status].label}
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-line bg-background/50 px-4 py-2 text-[11px]">
+        <span className="text-muted">
+          <span className="font-semibold text-ink">{money(Number(budget.spent))}</span> of {money(Number(budget.amount_limit))} ·{" "}
+          {Math.round(used)}%
         </span>
         <span className="flex">
-          <button onClick={onEdit} aria-label={`Edit ${budget.category_name} budget`} className="rounded-lg p-1.5 text-muted hover:bg-slate-100 hover:text-ink">
-            <Pencil size={14} />
+          <button onClick={onEdit} aria-label={`${t("Edit")} ${t(budget.category_name ?? "")}`} className="rounded-lg p-1 text-muted hover:bg-white hover:text-ink">
+            <Pencil size={13} />
           </button>
-          <button onClick={onDelete} aria-label={`Delete ${budget.category_name} budget`} className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600">
-            <Trash2 size={14} />
+          <button onClick={onDelete} aria-label={`${t("Delete")} ${t(budget.category_name ?? "")}`} className="rounded-lg p-1 text-muted hover:bg-red-50 hover:text-red-600">
+            <Trash2 size={13} />
           </button>
         </span>
       </div>

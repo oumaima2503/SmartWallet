@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import AuthLayout from "@/components/auth/AuthLayout";
 import PasswordField from "@/components/auth/PasswordField";
 import Field from "@/components/ui/Field";
@@ -15,13 +16,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+  const { t } = useT();
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const newErrors: Errors = {};
-    if (!email.trim()) newErrors.email = "Enter your email.";
-    if (!password) newErrors.password = "Enter your password.";
+    if (!email.trim()) newErrors.email = t("Enter your email.");
+    if (!password) newErrors.password = t("Enter your password.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -41,16 +43,16 @@ export default function LoginPage() {
       subtitle="Log in to see your finances."
       footer={
         <>
-          New to SmartWallet?{" "}
+          {t("New to SmartWallet?")}{" "}
           <Link href="/register" className="font-semibold text-brand hover:underline">
-            Create an account
+            {t("Create an account")}
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Field
-          label="Email"
+          label={t("Email")}
           type="email"
           autoComplete="email"
           value={email}
@@ -60,7 +62,7 @@ export default function LoginPage() {
           autoFocus
         />
         <PasswordField
-          label="Password"
+          label={t("Password")}
           value={password}
           onChange={setPassword}
           autoComplete="current-password"
@@ -74,7 +76,7 @@ export default function LoginPage() {
         )}
 
         <Button type="submit" loading={loading} className="w-full">
-          Log in
+          {t("Log in")}
         </Button>
       </form>
     </AuthLayout>

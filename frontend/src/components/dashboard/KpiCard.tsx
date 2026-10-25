@@ -9,7 +9,7 @@ const TONES = {
 
 type Props = {
   label: string;
-  value: string;
+  value: React.ReactNode;
   icon: LucideIcon;
   tone: keyof typeof TONES;
   // Change vs last month in %, null when there is nothing to compare
@@ -28,10 +28,10 @@ export default function KpiCard({ label, value, icon: Icon, tone, change = null,
     <div className="flex h-full min-w-0 flex-col rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(15,31,23,0.04)]">
       <div className="flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${TONES[tone].icon}`}>
+          <span className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:flex ${TONES[tone].icon}`}>
             <Icon size={16} />
           </span>
-          <span className="truncate text-xs font-medium text-muted">{label}</span>
+          <span className="truncate text-xs font-medium text-muted" title={label}>{label}</span>
         </span>
         {change !== null && (
           <span
@@ -46,7 +46,7 @@ export default function KpiCard({ label, value, icon: Icon, tone, change = null,
       </div>
 
       <div className="mt-3 flex items-end justify-between gap-2">
-        <p className="min-w-0 truncate text-xl font-bold tracking-tight text-ink">{value}</p>
+        <div className="min-w-0 truncate text-ink">{value}</div>
         {trend && <Sparkline values={trend} color={TONES[tone].line} className="hidden h-8 w-20 shrink-0 sm:block" />}
       </div>
       {footer && <p className="mt-1 truncate text-[11px] text-muted">{footer}</p>}

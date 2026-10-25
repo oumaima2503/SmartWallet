@@ -5,6 +5,7 @@ import { CalendarClock, ChevronDown, CircleCheck, Pencil, Plus, RotateCcw, Trash
 import { api } from "@/lib/api";
 import { formatDate, todayString } from "@/lib/format";
 import { useCurrency } from "@/lib/currency";
+import { confetti } from "@/lib/motion";
 import { SavingsGoal, SavingsGoalDetail } from "@/types/savings";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -12,6 +13,8 @@ import { useFeedback } from "@/components/ui/Feedback";
 import GoalForm, { GoalFormValues } from "./GoalForm";
 import ContributionForm from "./ContributionForm";
 import { goalIcon, goalTheme } from "./goalTheme";
+import Amount from "@/components/ui/Amount";
+import { t } from "@/lib/i18n";
 
 type Props = {
   goal: SavingsGoal;
@@ -33,7 +36,7 @@ function MonthlyPlan({ goal }: { goal: SavingsGoal }) {
 
   const months = monthsLeft(goal.target_date);
   if (months < 0) {
-    return <span className="rounded-full bg-red-50 px-2 py-0.5 font-medium text-red-600">Date passed</span>;
+    return <span className="rounded-full bg-red-50 px-2 py-0.5 font-medium text-red-600">{t("Date passed")}</span>;
   }
   return (
     <span className="rounded-full bg-background px-2 py-0.5">
@@ -46,12 +49,12 @@ function StatusChip({ goal }: { goal: SavingsGoal }) {
   if (goal.is_completed) {
     return (
       <span className="flex items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
-        <CircleCheck size={11} /> Done
+        <CircleCheck size={11} /> {t("Done")}
       </span>
     );
   }
   if (goal.target_reached) {
-    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Target reached</span>;
+    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{t("Target reached")}</span>;
   }
   return null;
 }
@@ -77,7 +80,7 @@ export default function GoalCard({ goal, onChange }: Props) {
   async function handleEdit(values: GoalFormValues) {
     await api(`/api/savings-goals/${goal.id}`, { method: "PUT", body: JSON.stringify(values) });
     setModal(null);
-    toast.success("Goal updated.");
+    toast.success(t("Goal updated."));
     await refresh();
   }
 
@@ -87,10 +90,11 @@ export default function GoalCard({ goal, onChange }: Props) {
       body: JSON.stringify(values),
     });
     setModal(null);
+    if (updated.target_reached) confetti();
     toast.success(
       updated.target_reached
-        ? `${money(values.amount)} added. You reached your target!`
-        : `${money(values.amount)} added to ${goal.name}.`
+        ? t("{amount} added. You reached your target!", { amount: money(values.amount) })
+        : t("{amount} added to {name}.", { amount: money(values.amount), name: goal.name })
     );
     await refresh();
   }
@@ -110,8 +114,8 @@ export default function GoalCard({ goal, onChange }: Props) {
 
   async function handleDelete() {
     const ok = await confirm({
-      title: `Delete "${goal.name}"?`,
-      message: `This also deletes its ${money(goal.saved_amount)} of recorded contributions. This can't be undone.`,
+      title: t("Delete \"{name}\"?", { name: goal.name }),
+      message: t("This also deletes its {amount} of recorded contributions. This can't be undone.", { amount: money(goal.saved_amount) }),
       confirmLabel: "Delete goal",
       danger: true,
     });
@@ -119,17 +123,18 @@ export default function GoalCard({ goal, onChange }: Props) {
   }
 
   function setCompleted(isCompleted: boolean) {
+    if (isCompleted) confetti();
     runAction(
       () => api(`/api/savings-goals/${goal.id}`, { method: "PUT", body: JSON.stringify({ is_completed: isCompleted }) }),
-      isCompleted ? "Congratulations, goal completed!" : "Goal reopened."
+      isCompleted ? t("Congratulations, goal completed!") : t("Goal reopened.")
     );
   }
 
   async function deleteContribution(contributionId: number, amount: number) {
     const ok = await confirm({
       title: "Delete this contribution?",
-      message: `${money(amount)} will be removed from ${goal.name}.`,
-      confirmLabel: "Delete",
+      message: t("{amount} will be removed from {name}.", { amount: money(amount), name: goal.name }),
+      confirmLabel: t("Delete"),
       danger: true,
     });
     if (ok) {
@@ -171,7 +176,7 @@ export default function GoalCard({ goal, onChange }: Props) {
           </div>
           <p className={`mt-0.5 flex items-center gap-1 text-[11px] ${theme.text}`}>
             <CalendarClock size={11} />
-            {goal.target_date ? `By ${formatDate(goal.target_date)}` : "No deadline"}
+            {goal.target_date ? t("By {date}", { date: formatDate(goal.target_date) }) : t("No deadline")}
           </p>
         </div>
         <span className="text-2xl font-bold tracking-tight" style={{ color: theme.color }}>
@@ -182,7 +187,7 @@ export default function GoalCard({ goal, onChange }: Props) {
 
       <div className="px-4 pt-3">
         <p className="truncate">
-          <span className="text-lg font-bold text-ink">{money(goal.saved_amount)}</span>
+          <Amount value={goal.saved_amount} size="card" className="text-ink" />
           <span className="text-xs text-muted"> saved of {money(goal.target_amount)}</span>
         </p>
 
@@ -196,7 +201,7 @@ export default function GoalCard({ goal, onChange }: Props) {
           aria-label={`${goal.name} progress`}
         >
           <div
-            className="h-full rounded-full transition-all duration-700"
+            className="fill-in h-full rounded-full transition-all duration-700"
             style={{ width: `${percent}%`, background: theme.color }}
           />
           {[25, 50, 75].map((mark) => (
@@ -212,9 +217,9 @@ export default function GoalCard({ goal, onChange }: Props) {
 
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
           <span className="rounded-full bg-background px-2 py-0.5">
-            {goal.target_reached ? "Target reached 🎉" : (
+            {goal.target_reached ? `${t("Target reached")} 🎉` : (
               <>
-                <span className="font-semibold text-ink">{money(goal.remaining_amount)}</span> to go
+                <span className="font-semibold text-ink">{money(goal.remaining_amount)}</span> {t("to go")}
               </>
             )}
           </span>
@@ -226,35 +231,35 @@ export default function GoalCard({ goal, onChange }: Props) {
         {!goal.is_completed && !goal.target_reached && (
           <Button size="xs" onClick={() => setModal("contribute")}>
             <Plus size={14} />
-            Add money
+            {t("Add money")}
           </Button>
         )}
         {goal.target_reached && !goal.is_completed && (
           <Button size="xs" onClick={() => setCompleted(true)} loading={busy}>
             <CircleCheck size={14} />
-            Complete
+            {t("Complete")}
           </Button>
         )}
         {goal.is_completed && (
           <Button size="xs" variant="secondary" onClick={() => setCompleted(false)} loading={busy}>
             <RotateCcw size={13} />
-            Reopen
+            {t("Reopen")}
           </Button>
         )}
         <Button size="xs" variant="ghost" onClick={toggleHistory} aria-expanded={historyOpen}>
-          History
+          {t("History")}
           <ChevronDown size={13} className={`transition ${historyOpen ? "rotate-180" : ""}`} />
         </Button>
-        <div className="ml-auto flex">
-          <Button size="xs" variant="ghost" onClick={() => setModal("edit")} aria-label={`Edit ${goal.name}`} title="Edit">
+        <div className="ms-auto flex">
+          <Button size="xs" variant="ghost" onClick={() => setModal("edit")} aria-label={`${t("Edit")} ${goal.name}`} title={t("Edit")}>
             <Pencil size={14} />
           </Button>
           <Button
             size="xs"
             variant="ghost"
             onClick={handleDelete}
-            aria-label={`Delete ${goal.name}`}
-            title="Delete"
+            aria-label={`${t("Delete")} ${goal.name}`}
+            title={t("Delete")}
             className="hover:!bg-red-50 hover:!text-red-600"
           >
             <Trash2 size={14} />
@@ -265,9 +270,9 @@ export default function GoalCard({ goal, onChange }: Props) {
       {historyOpen && (
         <div className="thin-scroll mx-4 mb-3 max-h-40 overflow-y-auto rounded-xl bg-background px-3 py-1.5">
           {!history ? (
-            <p className="py-1.5 text-xs text-muted">Loading...</p>
+            <p className="py-1.5 text-xs text-muted">{t("Loading...")}</p>
           ) : history.length === 0 ? (
-            <p className="py-1.5 text-xs text-muted">No contributions yet.</p>
+            <p className="py-1.5 text-xs text-muted">{t("No contributions yet.")}</p>
           ) : (
             <ul className="divide-y divide-line text-xs">
               {history.map((contribution) => (
@@ -281,7 +286,7 @@ export default function GoalCard({ goal, onChange }: Props) {
                   </div>
                   <button
                     onClick={() => deleteContribution(contribution.id, contribution.amount)}
-                    aria-label="Delete contribution"
+                    aria-label={t("Delete contribution")}
                     className="rounded-lg p-1 text-muted transition hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 size={13} />
@@ -293,7 +298,7 @@ export default function GoalCard({ goal, onChange }: Props) {
         </div>
       )}
 
-      <Modal open={modal === "edit"} title="Edit goal" onClose={() => setModal(null)}>
+      <Modal open={modal === "edit"} title={t("Edit goal")} onClose={() => setModal(null)}>
         <GoalForm
           initial={{ name: goal.name, target_amount: goal.target_amount, target_date: goal.target_date }}
           submitLabel="Save changes"
@@ -304,8 +309,8 @@ export default function GoalCard({ goal, onChange }: Props) {
 
       <Modal
         open={modal === "contribute"}
-        title={`Add money to ${goal.name}`}
-        description={`${money(goal.remaining_amount)} left to reach ${money(goal.target_amount)}.`}
+        title={t("Add money to {name}", { name: goal.name })}
+        description={t("{amount} left to reach {target}.", { amount: money(goal.remaining_amount), target: money(goal.target_amount) })}
         onClose={() => setModal(null)}
       >
         <ContributionForm

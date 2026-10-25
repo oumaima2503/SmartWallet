@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 // Sent on window when the backend answers 401 (not logged in / session expired)
 export const AUTH_EXPIRED_EVENT = "smartwallet:auth-expired";

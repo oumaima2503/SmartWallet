@@ -12,6 +12,9 @@ import { useFeedback } from "@/components/ui/Feedback";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import GoalCard from "@/components/savings/GoalCard";
 import GoalForm, { GoalFormValues } from "@/components/savings/GoalForm";
+import Hero from "@/components/ui/Hero";
+import Amount from "@/components/ui/Amount";
+import { t } from "@/lib/i18n";
 
 // Big header card: overall ring, total saved, and the goal closest to its target
 function GoalsHero({ data, money }: { data: SavingsGoalsResponse; money: (amount: number) => string }) {
@@ -23,9 +26,7 @@ function GoalsHero({ data, money }: { data: SavingsGoalsResponse; money: (amount
   const circumference = 2 * Math.PI * radius;
 
   return (
-    <section className="relative mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-dark via-[#0b7d45] to-brand p-5 text-white shadow-lg shadow-brand/20">
-      <div className="pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full bg-white/10" />
-      <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-white/5" />
+    <Hero className="mt-5">
 
       <div className="relative flex flex-col gap-5 md:flex-row md:items-center">
         <div className="flex items-center gap-4">
@@ -41,19 +42,21 @@ function GoalsHero({ data, money }: { data: SavingsGoalsResponse; money: (amount
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={`${(percent / 100) * circumference} ${circumference}`}
-                className="transition-all duration-700"
+                className="ring-in transition-all duration-700"
               />
             </svg>
             <span className="absolute inset-0 flex items-center justify-center text-lg font-bold">{Math.round(percent)}%</span>
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-white/75">You have saved</p>
-            <p className="truncate text-2xl font-bold tracking-tight">{money(summary.total_saved)}</p>
+            <p className="text-xs text-white/75">{t("You have saved")}</p>
+            <p className="truncate">
+              <Amount value={summary.total_saved} size="hero" />
+            </p>
             <p className="text-xs text-white/75">of {money(summary.total_target)} across all your goals</p>
           </div>
         </div>
 
-        <div className="flex gap-2 md:ml-auto">
+        <div className="flex gap-2 md:ms-auto">
           {[
             ["Active", active.length],
             ["Completed", summary.completed_goals],
@@ -67,17 +70,17 @@ function GoalsHero({ data, money }: { data: SavingsGoalsResponse; money: (amount
 
         {closest && (
           <div className="rounded-xl bg-white px-4 py-3 text-ink md:w-64">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">Closest to the finish</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">{t("Closest to the finish")}</p>
             <p className="mt-0.5 truncate text-sm font-semibold">{closest.name}</p>
             <p className="text-xs text-muted">
               {closest.target_reached
                 ? "Target reached, mark it as completed!"
-                : `${money(closest.remaining_amount)} to go · ${Math.round(closest.progress_percent)}%`}
+                : `${money(closest.remaining_amount)} ${t("to go")} · ${Math.round(closest.progress_percent)}%`}
             </p>
           </div>
         )}
       </div>
-    </section>
+    </Hero>
   );
 }
 
@@ -91,8 +94,8 @@ function AddGoalCard({ onClick }: { onClick: () => void }) {
       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-soft text-brand transition group-hover:scale-110 group-hover:bg-brand group-hover:text-white">
         <Plus size={20} />
       </span>
-      <span className="text-sm font-semibold text-ink">New goal</span>
-      <span className="max-w-[12rem] text-xs text-muted">A trip, a car, an emergency fund... what&apos;s next?</span>
+      <span className="text-sm font-semibold text-ink">{t("New goal")}</span>
+      <span className="max-w-[12rem] text-xs text-muted">{t("A trip, a car, an emergency fund... what's next?")}</span>
     </button>
   );
 }
@@ -129,18 +132,18 @@ export default function GoalsPage() {
 
   return (
     <main className="page">
-      <PageHeader title="Savings goals" subtitle="Put money aside for the things that matter to you.">
+      <PageHeader title={t("Savings goals")} subtitle={t("Put money aside for the things that matter to you.")}>
         {data && data.goals.length > 0 && (
           <Button onClick={() => setShowForm(true)}>
             <Plus size={18} />
-            New goal
+            {t("New goal")}
           </Button>
         )}
       </PageHeader>
 
       {error && !data && (
         <div className="mt-5">
-          <ErrorState message={`We couldn't load your goals. ${error}`} onRetry={loadGoals} />
+          <ErrorState message={`${t("We couldn't load your goals.")} ${error}`} onRetry={loadGoals} />
         </div>
       )}
 
@@ -159,12 +162,13 @@ export default function GoalsPage() {
         <div className="mt-5">
           <EmptyState
             icon={Target}
-            title="Start your first savings goal"
-            text="A laptop, a trip, an emergency fund... Set a target and track every dirham you put aside."
+            illustration="goal"
+            title={t("Start your first savings goal")}
+            text={t("A laptop, a trip, an emergency fund... Set a target and track every dirham you put aside.")}
             action={
               <Button onClick={() => setShowForm(true)}>
                 <Plus size={18} />
-                Create a goal
+                {t("Create a goal")}
               </Button>
             }
           />
@@ -177,7 +181,7 @@ export default function GoalsPage() {
 
           {active.length > 0 && (
             <section className="mt-6">
-              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">In progress</h2>
+              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">{t("In progress")}</h2>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {active.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} onChange={loadGoals} />
@@ -197,7 +201,7 @@ export default function GoalsPage() {
 
           {completed.length > 0 && (
             <section className="mt-6">
-              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Completed</h2>
+              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">{t("Completed")}</h2>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {completed.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} onChange={loadGoals} />
@@ -210,8 +214,8 @@ export default function GoalsPage() {
 
       <Modal
         open={showForm}
-        title="New savings goal"
-        description="What are you saving for?"
+        title={t("New savings goal")}
+        description={t("What are you saving for?")}
         onClose={() => setShowForm(false)}
       >
         <GoalForm submitLabel="Create goal" onSubmit={createGoal} onCancel={() => setShowForm(false)} />

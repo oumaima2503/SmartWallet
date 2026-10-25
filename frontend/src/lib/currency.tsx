@@ -15,7 +15,7 @@ export const CURRENCIES = {
 
 export type Currency = keyof typeof CURRENCIES;
 
-type Rates = { rates: Record<Currency, number>; updated_at: string; source: "live" | "fallback" };
+type Rates = { rates: Record<Currency, number>; all?: Record<string, number>; updated_at: string; source: "live" | "fallback" };
 
 type CurrencyContext = {
   currency: Currency;
@@ -28,6 +28,8 @@ type CurrencyContext = {
   toBase: (amount: number) => number;
   // MAD -> "1 234,5 €" (compact: "1,2k €")
   money: (amountMad: number, options?: { compact?: boolean }) => string;
+  // Same amount split for display: whole part, decimals and symbol ("5,095" ".00" "MAD")
+  parts: (amountMad: number) => { negative: boolean; whole: string; decimals: string; symbol: string };
 };
 
 const Context = createContext<CurrencyContext | null>(null);
@@ -97,12 +99,20 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const money = (amountMad: number, options?: { compact?: boolean }) => {
       const amount = convert(amountMad);
       const text = options?.compact
-        ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(amount)
-        : amount.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        ? new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(amount)
+        : amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
       return `${text} ${symbol}`;
     };
 
-    return { currency, symbol, rates, setCurrency, convert, toBase, money };
+    const parts = (amountMad: number) => {
+      const amount = convert(amountMad);
+      const [whole, decimals] = Math.abs(amount)
+        .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .split(".");
+      return { negative: amount < 0, whole, decimals: `.${decimals}`, symbol };
+    };
+
+    return { currency, symbol, rates, setCurrency, convert, toBase, money, parts };
   }, [currency, rates, setCurrency]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;

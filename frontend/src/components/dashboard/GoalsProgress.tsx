@@ -4,6 +4,7 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import { useCurrency } from "@/lib/currency";
 import { DashboardData } from "@/types/dashboard";
+import { t } from "@/lib/i18n";
 
 // Small progress ring for each goal
 function Ring({ percent, done }: { percent: number; done: boolean }) {
@@ -11,7 +12,7 @@ function Ring({ percent, done }: { percent: number; done: boolean }) {
   const circumference = 2 * Math.PI * radius;
   return (
     <svg viewBox="0 0 36 36" className="h-10 w-10 shrink-0 -rotate-90" aria-hidden="true">
-      <circle cx="18" cy="18" r={radius} fill="none" stroke="#eef2ef" strokeWidth="4" />
+      <circle cx="18" cy="18" r={radius} fill="none" stroke="var(--track)" strokeWidth="4" />
       <circle
         cx="18"
         cy="18"
@@ -31,21 +32,20 @@ export default function GoalsProgress({ savings }: { savings: DashboardData["sav
 
   return (
     <Card
-      title="Savings goals"
+      title={t("Savings goals")}
       className="h-full"
       action={
         <Link href="/goals" className="font-medium text-brand hover:underline">
-          View all
+          {t("View all")}
         </Link>
       }
     >
       <p className="mb-3 rounded-xl bg-brand-soft px-3 py-2 text-xs text-brand-dark">
-        <span className="font-semibold">{money(savings.saved_this_month)}</span> saved this month ·{" "}
-        {money(savings.total_saved)} in total
+        {t("{amount} saved this month", { amount: money(savings.saved_this_month) })} · {t("{amount} saved in total", { amount: money(savings.total_saved) })}
       </p>
 
       {savings.goals.length === 0 ? (
-        <p className="flex flex-1 items-center justify-center py-4 text-sm text-muted">No savings goals yet.</p>
+        <p className="flex flex-1 items-center justify-center py-4 text-sm text-muted">{t("No savings goals yet.")}</p>
       ) : (
         <ul className="space-y-2.5">
           {savings.goals.map((goal) => (
@@ -59,7 +59,7 @@ export default function GoalsProgress({ savings }: { savings: DashboardData["sav
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink">{goal.name}</p>
                 <p className="truncate text-[11px] text-muted">
-                  {money(goal.saved_amount)} of {money(goal.target_amount)}
+                  {t("{spent} of {limit}", { spent: money(goal.saved_amount), limit: money(goal.target_amount) })}
                 </p>
               </div>
             </li>

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import AuthLayout from "@/components/auth/AuthLayout";
 import PasswordField from "@/components/auth/PasswordField";
 import Field from "@/components/ui/Field";
@@ -24,16 +25,17 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+  const { t } = useT();
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const newErrors: Errors = {};
-    if (!name.trim()) newErrors.name = "Enter your name.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) newErrors.email = "Enter a valid email.";
+    if (!name.trim()) newErrors.name = t("Enter your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) newErrors.email = t("Enter a valid email.");
     const passwordProblem = passwordError(password);
-    if (passwordProblem) newErrors.password = passwordProblem;
-    else if (confirm !== password) newErrors.confirm = "The passwords don't match.";
+    if (passwordProblem) newErrors.password = t(passwordProblem);
+    else if (confirm !== password) newErrors.confirm = t("The passwords don't match.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -52,16 +54,16 @@ export default function RegisterPage() {
       subtitle="Start tracking your money in a minute."
       footer={
         <>
-          Already have an account?{" "}
+          {t("Already have an account?")}{" "}
           <Link href="/login" className="font-semibold text-brand hover:underline">
-            Log in
+            {t("Log in")}
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Field
-          label="Name"
+          label={t("Name")}
           autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -70,7 +72,7 @@ export default function RegisterPage() {
           autoFocus
         />
         <Field
-          label="Email"
+          label={t("Email")}
           type="email"
           autoComplete="email"
           value={email}
@@ -79,15 +81,15 @@ export default function RegisterPage() {
           error={errors.email}
         />
         <PasswordField
-          label="Password"
+          label={t("Password")}
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
           error={errors.password}
-          hint="At least 8 characters."
+          hint={t("At least 8 characters.")}
         />
         <PasswordField
-          label="Confirm password"
+          label={t("Confirm password")}
           value={confirm}
           onChange={setConfirm}
           autoComplete="new-password"
@@ -101,7 +103,7 @@ export default function RegisterPage() {
         )}
 
         <Button type="submit" loading={loading} className="w-full">
-          Create account
+          {t("Create account")}
         </Button>
       </form>
     </AuthLayout>

@@ -1,7 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express";
 import multer from "multer";
 import { requireAuth } from "../middleware/auth";
-import { confirmReceipt, getReceiptImage, scanReceipt } from "../controllers/receiptsController";
+import {
+  confirmReceipt,
+  deleteReceipt,
+  getReceipt,
+  getReceiptImage,
+  listReceipts,
+  scanReceipt,
+} from "../controllers/receiptsController";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -31,8 +38,11 @@ const router = Router();
 
 router.use(requireAuth);
 
+router.get("/", listReceipts);
 router.post("/scan", uploadReceipt, scanReceipt);
+router.get("/:id", getReceipt);
 router.get("/:id/image", getReceiptImage);
 router.post("/:id/confirm", confirmReceipt);
+router.delete("/:id", deleteReceipt);
 
 export default router;

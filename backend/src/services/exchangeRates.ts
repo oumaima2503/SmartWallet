@@ -14,6 +14,8 @@ const FALLBACK_RATES: Record<Currency, number> = { MAD: 1, EUR: 0.092, USD: 0.1 
 type Rates = {
   base: string;
   rates: Record<Currency, number>;
+  // Every currency the API knows (e.g. GBP, CHF), used to convert receipts from abroad
+  all: Record<string, number>;
   updated_at: string;
   source: "live" | "fallback";
 };
@@ -31,6 +33,7 @@ export async function getRates(): Promise<Rates> {
     const value: Rates = {
       base: BASE_CURRENCY,
       rates: { MAD: 1, EUR: data.rates.EUR, USD: data.rates.USD },
+      all: data.rates,
       updated_at: new Date(data.time_last_update_unix * 1000).toISOString(),
       source: "live",
     };
@@ -39,7 +42,7 @@ export async function getRates(): Promise<Rates> {
   } catch {
     // Keep the last good rates if we have them, otherwise the approximate ones
     if (cache) return cache.value;
-    return { base: BASE_CURRENCY, rates: FALLBACK_RATES, updated_at: new Date().toISOString(), source: "fallback" };
+    return { base: BASE_CURRENCY, rates: FALLBACK_RATES, all: FALLBACK_RATES, updated_at: new Date().toISOString(), source: "fallback" };
   }
 }
 

@@ -57,11 +57,21 @@ Rules:
 - Write in simple, friendly English, addressed to the user as "you". Be concise."""
 
 
-def analyze_month(statistics: dict) -> dict:
+LANGUAGES = {"en": "English", "fr": "French", "ar": "Arabic (Modern Standard Arabic)"}
+
+
+def analyze_month(statistics: dict, language: str = "en") -> dict:
     prompt = "Write the monthly report from these statistics:\n" + json.dumps(statistics, ensure_ascii=False)
+    instruction = SYSTEM_INSTRUCTION
+    if language in LANGUAGES and language != "en":
+        # Only the text changes language: category names must stay exactly as given (the backend checks them)
+        instruction += (
+            f"\n- Write every text field in {LANGUAGES[language]}. Keep the \"category\" values exactly as they"
+            " appear in the statistics (do not translate them)."
+        )
     result: MonthlyAnalysis = generate_json(
         prompt=prompt,
         schema=MonthlyAnalysis,
-        system_instruction=SYSTEM_INSTRUCTION,
+        system_instruction=instruction,
     )
     return result.model_dump()

@@ -108,6 +108,8 @@ export async function generateReport(req: Request, res: Response) {
   const userId = req.userId!;
   const month = typeof req.body?.month === "string" ? req.body.month : "";
   const regenerate = req.body?.regenerate === true;
+  // Language of the AI text (the numbers are the same in every language)
+  const language = ["en", "fr", "ar"].includes(req.body?.language) ? req.body.language : "en";
 
   if (!MONTH_PATTERN.test(month)) return res.status(400).json({ error: "Month must use the format YYYY-MM" });
   if (month > currentMonth()) return res.status(400).json({ error: "You can't analyze a future month" });
@@ -131,7 +133,7 @@ export async function generateReport(req: Request, res: Response) {
     const raw = await callAiService<unknown>("/reports/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ statistics }),
+      body: JSON.stringify({ statistics, language }),
     });
     analysis = validateAnalysis(raw, statistics);
   } catch (error) {

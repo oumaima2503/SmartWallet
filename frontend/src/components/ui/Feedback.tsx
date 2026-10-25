@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { CircleAlert, CircleCheck, X } from "lucide-react";
 import Modal from "./Modal";
 import Button from "./Button";
+import { t } from "@/lib/i18n";
 
 // Toasts (small messages after an action) and a confirm dialog that replaces window.confirm
 
@@ -32,7 +33,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   const show = useCallback((type: Toast["type"], message: string) => {
     const id = nextId.current++;
     setToasts((list) => [...list, { id, type, message }]);
-    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), 4000);
+    setTimeout(() => setToasts((list) => list.filter((toastItem) => toastItem.id !== id)), 4000);
   }, []);
 
   const toast = useRef({
@@ -60,7 +61,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         <p className="text-sm text-muted">{confirmOptions?.message}</p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={() => closeConfirm(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button variant={confirmOptions?.danger ? "danger" : "primary"} onClick={() => closeConfirm(true)}>
             {confirmOptions?.confirmLabel ?? "Confirm"}
@@ -69,21 +70,21 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       </Modal>
 
       <div aria-live="polite" className="fixed bottom-24 left-1/2 z-[60] lg:bottom-4 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:left-auto sm:right-4 sm:translate-x-0">
-        {toasts.map((t) => (
+        {toasts.map((toastItem) => (
           <div
-            key={t.id}
+            key={toastItem.id}
             role="status"
             className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4 text-sm text-ink shadow-lg"
           >
-            {t.type === "success" ? (
+            {toastItem.type === "success" ? (
               <CircleCheck size={18} className="mt-0.5 shrink-0 text-brand" />
             ) : (
               <CircleAlert size={18} className="mt-0.5 shrink-0 text-red-500" />
             )}
-            <p className="flex-1">{t.message}</p>
+            <p className="flex-1">{toastItem.message}</p>
             <button
-              onClick={() => setToasts((list) => list.filter((item) => item.id !== t.id))}
-              aria-label="Dismiss"
+              onClick={() => setToasts((list) => list.filter((item) => item.id !== toastItem.id))}
+              aria-label={t("Dismiss")}
               className="text-muted hover:text-ink"
             >
               <X size={16} />

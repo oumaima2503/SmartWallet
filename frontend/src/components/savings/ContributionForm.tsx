@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { todayString } from "@/lib/format";
 import { useCurrency } from "@/lib/currency";
+import { t } from "@/lib/i18n";
 
 type Props = {
   remaining: number;
@@ -32,7 +33,7 @@ export default function ContributionForm({ remaining, onSubmit, onCancel }: Prop
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setFormError("");
-    if (!amount || !(value > 0)) return setError("Enter an amount greater than 0.");
+    if (!amount || !(value > 0)) return setError(t("Enter an amount greater than 0."));
     setError("");
 
     setSaving(true);
@@ -49,7 +50,7 @@ export default function ContributionForm({ remaining, onSubmit, onCancel }: Prop
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div>
         <Field
-          label="Amount"
+          label={t("Amount")}
           type="number"
           inputMode="decimal"
           min="0.01"
@@ -64,7 +65,7 @@ export default function ContributionForm({ remaining, onSubmit, onCancel }: Prop
           error={error}
           hint={
             value > remainingShown && remaining > 0
-              ? `That's more than the ${money(remaining)} left. The goal will be reached.`
+              ? t("That's more than the {amount} left. The goal will be reached.", { amount: money(remaining) })
               : undefined
           }
         />
@@ -79,7 +80,7 @@ export default function ContributionForm({ remaining, onSubmit, onCancel }: Prop
               }}
               className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition hover:border-brand hover:bg-brand-soft"
             >
-              {quick.toLocaleString("fr-FR")} {symbol}
+              {quick.toLocaleString("en-US")} {symbol}
             </button>
           ))}
           {remaining > 0 && (
@@ -98,29 +99,29 @@ export default function ContributionForm({ remaining, onSubmit, onCancel }: Prop
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Date" type="date" value={date} max={todayString()} onChange={(e) => setDate(e.target.value)} />
+        <Field label={t("Date")} type="date" value={date} max={todayString()} onChange={(e) => setDate(e.target.value)} />
         <Field
-          label="Note"
+          label={t("Note")}
           optional
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={255}
-          placeholder="e.g. Part of my salary"
+          placeholder={t("e.g. Part of my salary")}
         />
       </div>
 
       <p className="rounded-xl bg-background p-3 text-xs text-muted">
-        Money you put aside is tracked here only. It is not counted as an expense.
+        {t("Money you put aside is tracked here only. It is not counted as an expense.")}
       </p>
 
       {formError && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{formError}</p>}
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" loading={saving}>
-          Add money
+          {t("Add money")}
         </Button>
       </div>
     </form>

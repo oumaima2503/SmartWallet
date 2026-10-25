@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 type Props = {
   label: string;
@@ -16,6 +17,7 @@ type Props = {
 export default function PasswordField({ label, value, onChange, autoComplete, error, hint }: Props) {
   const id = useId();
   const [visible, setVisible] = useState(false);
+  const { t } = useT();
   const message = error || hint;
 
   return (
@@ -32,15 +34,15 @@ export default function PasswordField({ label, value, onChange, autoComplete, er
           autoComplete={autoComplete}
           aria-invalid={!!error}
           aria-describedby={message ? `${id}-message` : undefined}
-          className={`h-11 w-full rounded-xl border bg-white px-3 pr-11 text-sm text-ink outline-none transition focus:ring-4 ${
+          className={`h-11 w-full rounded-xl border bg-white px-3 pe-11 text-sm text-ink outline-none transition focus:ring-4 ${
             error ? "border-red-400 focus:ring-red-100" : "border-line focus:border-brand focus:ring-brand/15"
           }`}
         />
         <button
           type="button"
           onClick={() => setVisible(!visible)}
-          aria-label={visible ? "Hide password" : "Show password"}
-          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted hover:text-ink"
+          aria-label={t(visible ? "Hide password" : "Show password")}
+          className="absolute inset-y-0 end-0 flex w-11 items-center justify-center text-muted hover:text-ink"
         >
           {visible ? <EyeOff size={17} /> : <Eye size={17} />}
         </button>

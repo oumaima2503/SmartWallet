@@ -2,6 +2,7 @@
 
 import { CURRENCIES, Currency, useCurrency } from "@/lib/currency";
 import { useFeedback } from "@/components/ui/Feedback";
+import { t } from "@/lib/i18n";
 
 // Segmented control: MAD | € | $
 export default function CurrencySwitch({ className = "" }: { className?: string }) {
@@ -13,14 +14,14 @@ export default function CurrencySwitch({ className = "" }: { className?: string 
     try {
       await setCurrency(next);
     } catch {
-      toast.error("Could not save your currency. Please try again.");
+      toast.error(t("Could not save your currency. Please try again."));
     }
   }
 
   return (
     <div
       role="radiogroup"
-      aria-label="Display currency"
+      aria-label={t("Display currency")}
       title={rates?.source === "fallback" ? "Approximate exchange rates (offline)" : undefined}
       className={`inline-flex rounded-xl bg-background p-1 ${className}`}
     >
@@ -31,7 +32,7 @@ export default function CurrencySwitch({ className = "" }: { className?: string 
             key={code}
             role="radio"
             aria-checked={active}
-            aria-label={CURRENCIES[code].name}
+            aria-label={t(CURRENCIES[code].name)}
             onClick={() => choose(code)}
             className={`h-8 min-w-11 rounded-lg px-2.5 text-xs font-semibold transition ${
               active ? "bg-white text-brand-dark shadow-sm" : "text-muted hover:text-ink"

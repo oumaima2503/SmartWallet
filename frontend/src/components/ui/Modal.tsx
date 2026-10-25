@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 type Props = {
   open: boolean;
@@ -35,7 +37,9 @@ export default function Modal({ open, title, description, onClose, children }: P
 
   if (!open) return null;
 
-  return (
+  // Rendered at the end of <body> (portal): a parent card with a transform or overflow-hidden
+  // (e.g. a hover effect) would otherwise move or clip the dialog
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onClose} />
       <div
@@ -55,7 +59,7 @@ export default function Modal({ open, title, description, onClose, children }: P
           <button
             data-close
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("Close")}
             className="rounded-lg p-1.5 text-muted transition hover:bg-background hover:text-ink"
           >
             <X size={18} />
@@ -63,6 +67,7 @@ export default function Modal({ open, title, description, onClose, children }: P
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

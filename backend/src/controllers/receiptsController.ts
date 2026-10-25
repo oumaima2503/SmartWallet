@@ -136,3 +136,64 @@ export async function confirmReceipt(req: Request, res: Response) {
 
   res.status(201).json(result.rows[0]);
 }
+
+// GET /api/receipts - scan history, newest first
+// For saved receipts the amount comes from the expense (what the user confirmed),
+// otherwise from what the AI read.
+export async function listReceipts(req: Request, res: Response) {
+  const result = await pool.query(
+    `SELECT r.id, r.created_at,
+       t.id AS transaction_id,
+       t.amount::float AS saved_amount,
+       to_char(t.date, 'YYYY-MM-DD') AS saved_date,
+       c.name AS category,
+       COALESCE(t.merchant, r.extracted_data->>'merchant') AS merchant,
+       (r.extracted_data->>'total_amount')::float AS read_amount,
+       r.extracted_data->>'currency' AS read_currency,
+       r.extracted_data IS NOT NULL AS was_read
+     FROM receipts r
+     LEFT JOIN transactions t ON t.receipt_id = r.id
+     LEFT JOIN categories c ON c.id = t.category_id
+     WHERE r.user_id = $1
+     ORDER BY r.created_at DESC
+     LIMIT 50`,
+    [req.userId]
+  );
+  res.json(result.rows);
+}
+
+// GET /api/receipts/:id - reopen a receipt that was scanned but not saved yet
+export async function getReceipt(req: Request, res: Response) {
+  const userId = req.userId!;
+  const receiptId = parseId(req.params.id);
+  const receipt = receiptId && (await findReceipt(userId, receiptId));
+  if (!receipt) return res.status(404).json({ error: "Receipt not found" });
+
+  const extraction = receipt.extracted_data as Extraction | null;
+  let suggestedCategoryId: number | null = null;
+  if (extraction?.suggested_category) {
+    const category = await pool.query(
+      "SELECT id FROM categories WHERE name = $1 AND type = 'expense' AND (user_id IS NULL OR user_id = $2) LIMIT 1",
+      [extraction.suggested_category, userId]
+    );
+    suggestedCategoryId = category.rows[0]?.id ?? null;
+  }
+
+  res.json({
+    receipt_id: receipt.id,
+    transaction_id: receipt.transaction_id,
+    status: !extraction ? "failed" : extraction.is_receipt ? "extracted" : "not_a_receipt",
+    extraction: extraction ? { ...extraction, suggested_category_id: suggestedCategoryId } : null,
+  });
+}
+
+// DELETE /api/receipts/:id - removes the photo; a saved expense stays (it just loses its receipt link)
+export async function deleteReceipt(req: Request, res: Response) {
+  const receiptId = parseId(req.params.id);
+  const receipt = receiptId && (await findReceipt(req.userId!, receiptId));
+  if (!receipt) return res.status(404).json({ error: "Receipt not found" });
+
+  await pool.query("DELETE FROM receipts WHERE id = $1 AND user_id = $2", [receipt.id, req.userId]);
+  await fs.rm(path.join(UPLOAD_DIR, receipt.file_path), { force: true });
+  res.status(204).send();
+}

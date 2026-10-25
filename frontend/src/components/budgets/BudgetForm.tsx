@@ -7,6 +7,7 @@ import Select from "@/components/ui/Select";
 import { useCurrency } from "@/lib/currency";
 import { formatMonth } from "@/lib/format";
 import { Category } from "@/types/receipts";
+import { t } from "@/lib/i18n";
 
 export type BudgetFormValues = { category_id: number | null; amount_limit: string };
 
@@ -51,8 +52,8 @@ export default function BudgetForm({
     event.preventDefault();
     const value = Number(amount);
     const newErrors: typeof errors = {};
-    if (!scope) newErrors.scope = "Choose what this budget is for.";
-    if (!amount || !(value > 0)) newErrors.amount = "Enter a limit greater than 0.";
+    if (!scope) newErrors.scope = t("Choose what this budget is for.");
+    if (!amount || !(value > 0)) newErrors.amount = t("Enter a limit greater than 0.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -71,24 +72,24 @@ export default function BudgetForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <Select
-        label="Budget for"
+        label={t("Budget for")}
         value={scope}
         onChange={(e) => setScope(e.target.value)}
         error={errors.scope}
-        hint={scope === OVERALL ? "All your expenses of the month count toward this limit." : "Only expenses in this category count."}
+        hint={scope === OVERALL ? t("All your expenses of the month count toward this limit.") : t("Only expenses in this category count.")}
       >
         <option value="" disabled>
-          Choose...
+          {t("Choose...")}
         </option>
         <option value={OVERALL} disabled={hasOverall && initial?.category_id !== null}>
           Overall monthly budget{hasOverall && initial?.category_id !== null ? " (already set)" : ""}
         </option>
-        <optgroup label="Category budget">
+        <optgroup label={t("Category budget")}>
           {categories.map((category) => {
             const taken = takenCategoryIds.includes(category.id) && initial?.category_id !== category.id;
             return (
               <option key={category.id} value={category.id} disabled={taken}>
-                {category.name}
+                {t(category.name)}
                 {taken ? " (already set)" : ""}
               </option>
             );
@@ -97,7 +98,7 @@ export default function BudgetForm({
       </Select>
 
       <Field
-        label={`Limit for ${formatMonth(month)}`}
+        label={t("Limit for {month}", { month: formatMonth(month) })}
         type="number"
         inputMode="decimal"
         min="0.01"
@@ -113,7 +114,7 @@ export default function BudgetForm({
 
       <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" loading={saving}>
           {submitLabel}

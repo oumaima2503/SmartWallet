@@ -109,3 +109,6 @@ CREATE TABLE IF NOT EXISTS ai_reports (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, month)
 );
+
+-- Profile photo (small data URL, resized in the browser)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;

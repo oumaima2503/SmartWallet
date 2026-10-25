@@ -3,28 +3,28 @@
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import { categoryIcon } from "@/lib/categoryIcons";
-import { useCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/format";
 import { RecentTransaction } from "@/types/dashboard";
+import Amount from "@/components/ui/Amount";
+import { t } from "@/lib/i18n";
 
 export default function RecentTransactions({ transactions }: { transactions: RecentTransaction[] }) {
-  const { money } = useCurrency();
 
   return (
     <Card
-      title="Recent transactions"
+      title={t("Recent transactions")}
       className="h-full"
       action={
         <Link href="/transactions" className="font-medium text-brand hover:underline">
-          View all
+          {t("View all")}
         </Link>
       }
     >
       {transactions.length === 0 ? (
-        <p className="flex flex-1 items-center justify-center py-6 text-sm text-muted">No transactions this month.</p>
+        <p className="flex flex-1 items-center justify-center py-6 text-sm text-muted">{t("No transactions this month.")}</p>
       ) : (
         // About 4 rows visible, the rest scrolls
-        <ul className="thin-scroll -mx-2 max-h-[14.5rem] overflow-y-auto px-2" tabIndex={0} aria-label="Recent transactions">
+        <ul className="thin-scroll -mx-2 max-h-[14.5rem] overflow-y-auto px-2" tabIndex={0} aria-label={t("Recent transactions")}>
           {transactions.map((transaction) => {
             const Icon = categoryIcon(transaction.category);
             const isIncome = transaction.type === "income";
@@ -42,12 +42,11 @@ export default function RecentTransactions({ transactions }: { transactions: Rec
                     {transaction.merchant || transaction.description || transaction.category}
                   </p>
                   <p className="truncate text-[11px] text-muted">
-                    {transaction.category} · {formatDate(transaction.date)}
+                    {t(transaction.category)} · {formatDate(transaction.date)}
                   </p>
                 </div>
                 <span className={`shrink-0 text-sm font-semibold ${isIncome ? "text-brand" : "text-ink"}`}>
-                  {isIncome ? "+" : "-"}
-                  {money(transaction.amount)}
+                  <Amount value={transaction.amount} size="list" sign={isIncome ? "+" : "-"} />
                 </span>
               </li>
             );

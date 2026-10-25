@@ -37,3 +37,16 @@ export type SavedExpense = {
   merchant: string | null;
   description: string | null;
 };
+
+export type ReceiptHistoryItem = {
+  id: number;
+  created_at: string;
+  transaction_id: number | null;
+  saved_amount: number | null;
+  saved_date: string | null;
+  category: string | null;
+  merchant: string | null;
+  read_amount: number | null;
+  read_currency: string | null;
+  was_read: boolean;
+};

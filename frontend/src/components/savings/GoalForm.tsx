@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { todayString } from "@/lib/format";
 import { useCurrency } from "@/lib/currency";
+import { t } from "@/lib/i18n";
 
 export type GoalFormValues = {
   name: string;
@@ -36,8 +37,8 @@ export default function GoalForm({ initial, submitLabel, onSubmit, onCancel }: P
 
     const amount = Number(targetAmount);
     const newErrors: Errors = {};
-    if (!name.trim()) newErrors.name = "Give your goal a name.";
-    if (!targetAmount || !(amount > 0)) newErrors.target_amount = "Enter an amount greater than 0.";
+    if (!name.trim()) newErrors.name = t("Give your goal a name.");
+    if (!targetAmount || !(amount > 0)) newErrors.target_amount = t("Enter an amount greater than 0.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -55,15 +56,15 @@ export default function GoalForm({ initial, submitLabel, onSubmit, onCancel }: P
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <Field
-        label="Goal name"
+        label={t("Goal name")}
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="e.g. New laptop, Vacation, Emergency fund"
+        placeholder={t("e.g. New laptop, Vacation, Emergency fund")}
         maxLength={100}
         error={errors.name}
       />
       <Field
-        label="Target amount"
+        label={t("Target amount")}
         type="number"
         inputMode="decimal"
         min="0.01"
@@ -75,20 +76,20 @@ export default function GoalForm({ initial, submitLabel, onSubmit, onCancel }: P
         error={errors.target_amount}
       />
       <Field
-        label="Target date"
+        label={t("Target date")}
         optional
         type="date"
         min={initial ? undefined : todayString()}
         value={targetDate}
         onChange={(e) => setTargetDate(e.target.value)}
-        hint="We'll tell you how much to save each month to get there."
+        hint={t("We'll tell you how much to save each month to get there.")}
       />
 
       {errors.form && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{errors.form}</p>}
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" loading={saving}>
           {submitLabel}

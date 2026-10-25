@@ -9,6 +9,7 @@ import { useCurrency } from "@/lib/currency";
 import { todayString } from "@/lib/format";
 import { Category } from "@/types/receipts";
 import { Transaction, TransactionInput, TransactionType } from "@/types/transactions";
+import { t } from "@/lib/i18n";
 
 type Props = {
   categories: Category[];
@@ -46,9 +47,9 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
     event.preventDefault();
     const value = Number(amount);
     const newErrors: Errors = {};
-    if (!amount || !(value > 0)) newErrors.amount = "Enter an amount greater than 0.";
-    if (!date) newErrors.date = "Choose a date.";
-    if (!categoryId) newErrors.category = "Choose a category.";
+    if (!amount || !(value > 0)) newErrors.amount = t("Enter an amount greater than 0.");
+    if (!date) newErrors.date = t("Choose a date.");
+    if (!categoryId) newErrors.category = t("Choose a category.");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -74,7 +75,7 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {/* Expense / income switch */}
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1" role="radiogroup" aria-label="Type">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1" role="radiogroup" aria-label={t("Type")}>
         {(
           [
             ["expense", "Expense", ArrowUpRight, "text-rose-600"],
@@ -99,7 +100,7 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Amount"
+          label={t("Amount")}
           type="number"
           inputMode="decimal"
           min="0.01"
@@ -111,19 +112,19 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
           error={errors.amount}
           autoFocus={!initial}
         />
-        <Field label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
+        <Field label={t("Date")} type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
       </div>
 
       <Select
-        label="Category"
+        label={t("Category")}
         value={categoryId}
         onChange={(e) => setCategoryId(e.target.value)}
         error={errors.category}
       >
-        <option value="">Choose a category</option>
+        <option value="">{t("Choose a category")}</option>
         {options.map((category) => (
           <option key={category.id} value={category.id}>
-            {category.name}
+            {t(category.name)}
             {category.is_custom ? " (custom)" : ""}
           </option>
         ))}
@@ -131,20 +132,20 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label={type === "income" ? "From" : "Store / merchant"}
+          label={type === "income" ? t("Source") : t("Store / merchant")}
           optional
           value={merchant}
           onChange={(e) => setMerchant(e.target.value)}
           maxLength={150}
-          placeholder={type === "income" ? "e.g. Employer" : "e.g. Marjane"}
+          placeholder={type === "income" ? t("e.g. Employer") : t("e.g. Marjane")}
         />
         <Field
-          label="Description"
+          label={t("Description")}
           optional
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={255}
-          placeholder="e.g. Weekly groceries"
+          placeholder={t("e.g. Weekly groceries")}
         />
       </div>
 
@@ -152,7 +153,7 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
 
       <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" loading={saving}>
           {submitLabel}

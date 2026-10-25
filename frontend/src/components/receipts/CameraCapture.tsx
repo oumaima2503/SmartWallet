@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, RefreshCw, RotateCcw, SwitchCamera } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { t } from "@/lib/i18n";
 
 type Props = {
   open: boolean;
@@ -17,11 +18,11 @@ type Status = "starting" | "live" | "captured" | "error";
 function cameraErrorMessage(error: unknown) {
   const name = (error as DOMException)?.name;
   if (name === "NotAllowedError" || name === "SecurityError") {
-    return "Camera access was blocked. Allow the camera in your browser's address bar, then try again.";
+    return t("Camera access was blocked. Allow the camera in your browser's address bar, then try again.");
   }
-  if (name === "NotFoundError" || name === "OverconstrainedError") return "No camera was found on this device.";
-  if (name === "NotReadableError") return "The camera is already used by another app. Close it and try again.";
-  return "The camera could not be started.";
+  if (name === "NotFoundError" || name === "OverconstrainedError") return t("No camera was found on this device.");
+  if (name === "NotReadableError") return t("The camera is already used by another app. Close it and try again.");
+  return t("The camera could not be started.");
 }
 
 // Takes a photo with the device camera (webcam on computers) using getUserMedia
@@ -135,8 +136,8 @@ export default function CameraCapture({ open, onClose, onCapture }: Props) {
   return (
     <Modal
       open={open}
-      title="Take a photo of your receipt"
-      description="Place the whole receipt inside the frame, in good light."
+      title={t("Take a photo of your receipt")}
+      description={t("Place the whole receipt inside the frame, in good light.")}
       onClose={close}
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-900 sm:aspect-[4/3]">
@@ -162,7 +163,7 @@ export default function CameraCapture({ open, onClose, onCapture }: Props) {
         {status === "starting" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/80" role="status">
             <Camera size={28} className="animate-pulse" />
-            <p className="text-sm">Starting the camera...</p>
+            <p className="text-sm">{t("Starting the camera...")}</p>
           </div>
         )}
 
@@ -172,7 +173,7 @@ export default function CameraCapture({ open, onClose, onCapture }: Props) {
             <p className="max-w-xs text-sm">{error}</p>
             <Button size="sm" variant="secondary" onClick={() => startCamera()}>
               <RefreshCw size={14} />
-              Try again
+              {t("Try again")}
             </Button>
           </div>
         )}
@@ -180,8 +181,8 @@ export default function CameraCapture({ open, onClose, onCapture }: Props) {
         {status === "live" && cameras.length > 1 && (
           <button
             onClick={switchCamera}
-            aria-label="Switch camera"
-            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
+            aria-label={t("Switch camera")}
+            className="absolute end-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
           >
             <SwitchCamera size={18} />
           </button>
@@ -193,18 +194,18 @@ export default function CameraCapture({ open, onClose, onCapture }: Props) {
           <>
             <Button variant="secondary" onClick={retake}>
               <RotateCcw size={16} />
-              Retake
+              {t("Retake")}
             </Button>
-            <Button onClick={confirmPhoto}>Use this photo</Button>
+            <Button onClick={confirmPhoto}>{t("Use this photo")}</Button>
           </>
         ) : (
           <>
             <Button variant="secondary" onClick={close}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={capture} disabled={status !== "live"}>
               <Camera size={18} />
-              Take photo
+              {t("Take photo")}
             </Button>
           </>
         )}

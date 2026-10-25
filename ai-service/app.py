@@ -64,10 +64,11 @@ def receipts_analyze():
 
 @app.post("/reports/analyze")
 def reports_analyze():
-    statistics = (request.get_json(silent=True) or {}).get("statistics")
+    body = request.get_json(silent=True) or {}
+    statistics = body.get("statistics")
     if not isinstance(statistics, dict) or "totals" not in statistics:
         return jsonify({"error": "statistics are missing"}), 400
-    return jsonify(analyze_month(statistics))
+    return jsonify(analyze_month(statistics, body.get("language", "en")))
 
 
 if __name__ == "__main__":

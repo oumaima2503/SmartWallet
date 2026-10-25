@@ -8,6 +8,7 @@ import { Category } from "@/types/receipts";
 import { TransactionType } from "@/types/transactions";
 import Button from "@/components/ui/Button";
 import { useFeedback } from "@/components/ui/Feedback";
+import { t } from "@/lib/i18n";
 
 type Props = {
   categories: Category[];
@@ -48,7 +49,7 @@ export default function CategoriesManager({ categories, onChange }: Props) {
     }
     const ok = await run(
       () => api("/api/categories", { method: "POST", body: JSON.stringify({ name, type: tab }) }),
-      `Category "${name}" added.`
+      t("Category \"{name}\" added.", { name })
     );
     if (ok) setNewName("");
   }
@@ -65,9 +66,9 @@ export default function CategoriesManager({ categories, onChange }: Props) {
 
   async function remove(category: Category) {
     const yes = await confirm({
-      title: `Delete "${category.name}"?`,
+      title: t("Delete \"{name}\"?", { name: category.name }),
       message: "You can only delete a category that is not used by any transaction or budget.",
-      confirmLabel: "Delete",
+      confirmLabel: t("Delete"),
       danger: true,
     });
     if (yes) await run(() => api(`/api/categories/${category.id}`, { method: "DELETE" }), "Category deleted.");
@@ -85,7 +86,7 @@ export default function CategoriesManager({ categories, onChange }: Props) {
               tab === type ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"
             }`}
           >
-            {type} categories
+            {t(type === "income" ? "Income categories" : "Expense categories")}
           </button>
         ))}
       </div>
@@ -106,38 +107,38 @@ export default function CategoriesManager({ categories, onChange }: Props) {
                     onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                     maxLength={100}
                     autoFocus
-                    aria-label="Category name"
+                    aria-label={t("Category name")}
                     className="h-8 min-w-0 flex-1 rounded-lg border border-brand px-2 text-sm outline-none focus:ring-2 focus:ring-brand/20"
                   />
-                  <button type="submit" disabled={busy} aria-label="Save" className="rounded-lg p-1.5 text-brand hover:bg-brand-soft">
+                  <button type="submit" disabled={busy} aria-label={t("Save")} className="rounded-lg p-1.5 text-brand hover:bg-brand-soft">
                     <Check size={16} />
                   </button>
-                  <button type="button" onClick={() => setEditing(null)} aria-label="Cancel" className="rounded-lg p-1.5 text-muted hover:bg-slate-100">
+                  <button type="button" onClick={() => setEditing(null)} aria-label={t("Cancel")} className="rounded-lg p-1.5 text-muted hover:bg-slate-100">
                     <X size={16} />
                   </button>
                 </form>
               ) : (
                 <>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink">{category.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink">{t(category.name)}</span>
                   {category.is_custom ? (
                     <span className="flex">
                       <button
                         onClick={() => setEditing({ id: category.id, name: category.name })}
-                        aria-label={`Rename ${category.name}`}
+                        aria-label={`${t("Rename")} ${category.name}`}
                         className="rounded-lg p-1.5 text-muted hover:bg-slate-100 hover:text-ink"
                       >
                         <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => remove(category)}
-                        aria-label={`Delete ${category.name}`}
+                        aria-label={`${t("Delete")} ${category.name}`}
                         className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 size={14} />
                       </button>
                     </span>
                   ) : (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-muted">Default</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-muted">{t("Default")}</span>
                   )}
                 </>
               )}
@@ -151,13 +152,13 @@ export default function CategoriesManager({ categories, onChange }: Props) {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           maxLength={100}
-          placeholder={`New ${tab} category`}
-          aria-label="New category name"
+          placeholder={t(tab === "income" ? "New income category" : "New expense category")}
+          aria-label={t("New category name")}
           className="h-10 min-w-0 flex-1 rounded-xl border border-line px-3 text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
         />
         <Button type="submit" size="sm" loading={busy} disabled={!newName.trim()}>
           <Plus size={15} />
-          Add
+          {t("Add")}
         </Button>
       </form>
     </div>

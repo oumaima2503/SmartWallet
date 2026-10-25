@@ -37,11 +37,11 @@ export default function Field({ label, hint, error, warning, suffix, optional, c
           aria-describedby={messageId}
           {...props}
           className={`h-11 w-full rounded-xl border bg-white px-3 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:ring-4 ${
-            suffix ? "pr-14" : ""
+            suffix ? "pe-14" : ""
           } ${border}`}
         />
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted">{suffix}</span>
+          <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-sm text-muted">{suffix}</span>
         )}
       </div>
       {message && (
