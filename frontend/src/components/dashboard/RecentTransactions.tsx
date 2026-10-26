@@ -7,8 +7,10 @@ import { formatDate } from "@/lib/format";
 import { RecentTransaction } from "@/types/dashboard";
 import Amount from "@/components/ui/Amount";
 import { t } from "@/lib/i18n";
+import Pager, { usePaged } from "@/components/ui/Pager";
 
 export default function RecentTransactions({ transactions }: { transactions: RecentTransaction[] }) {
+  const paged = usePaged(transactions, 4);
 
   return (
     <Card
@@ -23,9 +25,10 @@ export default function RecentTransactions({ transactions }: { transactions: Rec
       {transactions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center py-6 text-sm text-muted">{t("No transactions this month.")}</p>
       ) : (
-        // About 4 rows visible, the rest scrolls
-        <ul className="thin-scroll -mx-2 max-h-[14.5rem] overflow-y-auto px-2" tabIndex={0} aria-label={t("Recent transactions")}>
-          {transactions.map((transaction) => {
+        <>
+        {/* 4 per page; the list keeps its height so the pager stays in place */}
+        <ul key={paged.page} className="rise -mx-1.5 min-h-[13.5rem] flex-1" aria-label={t("Recent transactions")}>
+          {paged.visible.map((transaction) => {
             const Icon = categoryIcon(transaction.category);
             const isIncome = transaction.type === "income";
             return (
@@ -39,7 +42,7 @@ export default function RecentTransactions({ transactions }: { transactions: Rec
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink">
-                    {transaction.merchant || transaction.description || transaction.category}
+                    {transaction.merchant || transaction.description || t(transaction.category)}
                   </p>
                   <p className="truncate text-[11px] text-muted">
                     {t(transaction.category)} · {formatDate(transaction.date)}
@@ -52,6 +55,8 @@ export default function RecentTransactions({ transactions }: { transactions: Rec
             );
           })}
         </ul>
+        <Pager {...paged} onChange={paged.setPage} />
+        </>
       )}
     </Card>
   );

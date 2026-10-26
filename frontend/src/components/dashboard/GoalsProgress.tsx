@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import { useCurrency } from "@/lib/currency";
 import { DashboardData } from "@/types/dashboard";
 import { t } from "@/lib/i18n";
+import Pager, { usePaged } from "@/components/ui/Pager";
 
 // Small progress ring for each goal
 function Ring({ percent, done }: { percent: number; done: boolean }) {
@@ -29,6 +30,7 @@ function Ring({ percent, done }: { percent: number; done: boolean }) {
 
 export default function GoalsProgress({ savings }: { savings: DashboardData["savings"] }) {
   const { money } = useCurrency();
+  const paged = usePaged(savings.goals, 4);
 
   return (
     <Card
@@ -47,8 +49,9 @@ export default function GoalsProgress({ savings }: { savings: DashboardData["sav
       {savings.goals.length === 0 ? (
         <p className="flex flex-1 items-center justify-center py-4 text-sm text-muted">{t("No savings goals yet.")}</p>
       ) : (
-        <ul className="space-y-2.5">
-          {savings.goals.map((goal) => (
+        <>
+        <ul key={paged.page} className="rise min-h-[12rem] flex-1 space-y-2.5">
+          {paged.visible.map((goal) => (
             <li key={goal.id} className="flex items-center gap-3">
               <div className="relative">
                 <Ring percent={goal.progress_percent} done={goal.target_reached} />
@@ -65,6 +68,8 @@ export default function GoalsProgress({ savings }: { savings: DashboardData["sav
             </li>
           ))}
         </ul>
+        <Pager {...paged} onChange={paged.setPage} />
+        </>
       )}
     </Card>
   );

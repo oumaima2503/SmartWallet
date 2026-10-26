@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import { useCurrency } from "@/lib/currency";
 import { DashboardData } from "@/types/dashboard";
 import { t } from "@/lib/i18n";
+import Pager, { usePaged } from "@/components/ui/Pager";
 
 const BAR_COLORS = { ok: "bg-brand", warning: "bg-amber-500", exceeded: "bg-rose-500" };
 const TEXT_COLORS = { ok: "text-muted", warning: "text-amber-600", exceeded: "text-rose-600" };
@@ -12,6 +13,7 @@ const TEXT_COLORS = { ok: "text-muted", warning: "text-amber-600", exceeded: "te
 export default function BudgetUsageCard({ budgets }: { budgets: DashboardData["budgets"] }) {
   const { money } = useCurrency();
   const all = [...(budgets.overall ? [budgets.overall] : []), ...budgets.categories];
+  const paged = usePaged(all, 4);
 
   return (
     <Card
@@ -26,8 +28,10 @@ export default function BudgetUsageCard({ budgets }: { budgets: DashboardData["b
       {all.length === 0 ? (
         <p className="flex flex-1 items-center justify-center py-6 text-sm text-muted">{t("No budget set for this month.")}</p>
       ) : (
-        <div className="space-y-3.5">
-          {all.map((budget) => (
+        <>
+        {/* 4 per page; the list keeps its height so the pager stays in place */}
+        <div key={paged.page} className="rise min-h-[14rem] flex-1 space-y-3.5">
+          {paged.visible.map((budget) => (
             <div key={budget.id}>
               <div className="flex items-baseline justify-between gap-2 text-xs">
                 <span className={`truncate ${budget.is_overall ? "font-semibold text-ink" : "text-ink"}`}>{t(budget.category)}</span>
@@ -48,6 +52,8 @@ export default function BudgetUsageCard({ budgets }: { budgets: DashboardData["b
             </div>
           ))}
         </div>
+        <Pager {...paged} onChange={paged.setPage} />
+        </>
       )}
     </Card>
   );

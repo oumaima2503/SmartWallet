@@ -3,7 +3,7 @@ import { pool } from "../db";
 import { fetchGoals } from "./savingsGoalsController";
 
 const TREND_MONTHS = 6;
-const RECENT_LIMIT = 10;
+const RECENT_LIMIT = 12;
 
 function round(value: number) {
   return Math.round(value * 100) / 100;

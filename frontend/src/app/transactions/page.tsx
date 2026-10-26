@@ -35,12 +35,22 @@ import TransactionForm from "@/components/transactions/TransactionForm";
 import CategoriesManager from "@/components/transactions/CategoriesManager";
 import Hero from "@/components/ui/Hero";
 import Amount from "@/components/ui/Amount";
+import DateFilter, { DateRange, rangeLabel } from "@/components/transactions/DateFilter";
 import SpendingCalendar from "@/components/transactions/SpendingCalendar";
 import { currentLanguage, LANGUAGES, t } from "@/lib/i18n";
 
 type TypeFilter = "all" | TransactionType;
 
 // First and last day of a "YYYY-MM" month
+// Totals for the summary row: the summary endpoint answers per month, custom dates use the list itself
+function toSummary(data: TransactionSummary | Transaction[]): TransactionSummary {
+  if (!Array.isArray(data)) return data;
+  const sum = (type: string) => data.filter((tx) => tx.type === type).reduce((total, tx) => total + Number(tx.amount), 0);
+  const income = sum("income");
+  const expenses = sum("expense");
+  return { month: null, total_income: String(income), total_expenses: String(expenses), balance: String(income - expenses) };
+}
+
 function monthRange(month: string) {
   const [year, m] = month.split("-").map(Number);
   const lastDay = new Date(year, m, 0).getDate();
@@ -94,6 +104,8 @@ export default function TransactionsPage() {
 
   const [month, setMonth] = useState(currentMonthString());
   const [allTime, setAllTime] = useState(false);
+  // Custom dates (Today, Last 7 days, From / To...): replaces the month while set
+  const [range, setRange] = useState<DateRange | null>(null);
   const [type, setType] = useState<TypeFilter>("all");
   const [categoryId, setCategoryId] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -117,33 +129,38 @@ export default function TransactionsPage() {
 
   const loadTransactions = useCallback(async () => {
     const params = new URLSearchParams();
-    if (!allTime) {
-      const { start, end } = monthRange(month);
-      params.set("start_date", start);
-      params.set("end_date", end);
+    const period = range ?? (allTime ? null : monthRange(month));
+    if (period) {
+      params.set("start_date", period.start);
+      params.set("end_date", period.end);
     }
     if (type !== "all") params.set("type", type);
     if (categoryId) params.set("category_id", categoryId);
     if (search) params.set("search", search);
 
     const listPath = `/api/transactions?${params}`;
-    const summaryPath = allTime ? "/api/transactions/summary" : `/api/transactions/summary?month=${month}`;
+    // Totals of the whole period (without the type / category / search filters)
+    const summaryPath = range
+      ? `/api/transactions?start_date=${range.start}&end_date=${range.end}`
+      : allTime
+        ? "/api/transactions/summary"
+        : `/api/transactions/summary?month=${month}`;
     // Show the last known list at once, then the fresh one
     const cachedList = peekCache<Transaction[]>(listPath);
-    const cachedSummary = peekCache<TransactionSummary>(summaryPath);
+    const cachedSummary = peekCache<TransactionSummary | Transaction[]>(summaryPath);
     if (cachedList && cachedSummary) {
       setTransactions(cachedList.data);
-      setSummary(cachedSummary.data);
+      setSummary(toSummary(cachedSummary.data));
     }
     try {
-      const [list, totals] = await Promise.all([api<Transaction[]>(listPath), api<TransactionSummary>(summaryPath)]);
+      const [list, totals] = await Promise.all([api<Transaction[]>(listPath), api<TransactionSummary | Transaction[]>(summaryPath)]);
       setTransactions(list);
-      setSummary(totals);
+      setSummary(toSummary(totals));
       setError("");
     } catch (err) {
       setError((err as Error).message);
     }
-  }, [month, allTime, type, categoryId, search]);
+  }, [month, allTime, range, type, categoryId, search]);
 
   useEffect(() => {
     loadCategories().catch(() => toast.error(t("Could not load your categories.")));
@@ -163,7 +180,7 @@ export default function TransactionsPage() {
     return [...map.entries()];
   }, [transactions]);
 
-  const filtered = type !== "all" || !!categoryId || !!search;
+  const filtered = type !== "all" || !!categoryId || !!search || !!range;
   const visibleCategories = categories.filter((c) => type === "all" || c.type === type);
 
   async function create(values: TransactionInput) {
@@ -199,6 +216,7 @@ export default function TransactionsPage() {
   }
 
   function clearFilters() {
+    setRange(null);
     setType("all");
     setCategoryId("");
     setSearchInput("");
@@ -208,7 +226,9 @@ export default function TransactionsPage() {
   const expenses = Number(summary?.total_expenses ?? 0);
   const balance = Number(summary?.balance ?? 0);
   const editing = modal && typeof modal === "object" ? modal : null;
-  const periodLabel = allTime ? t("All time") : formatMonth(month);
+  const periodLabel = range ? rangeLabel(range) : allTime ? t("All time") : formatMonth(month);
+  // The calendar shows one month: the selected month, or the month of a custom range inside one month
+  const calendarMonth = range ? (range.start.slice(0, 7) === range.end.slice(0, 7) ? range.start.slice(0, 7) : null) : allTime ? null : month;
   const spentShare = income > 0 ? Math.min((expenses / income) * 100, 100) : expenses > 0 ? 100 : 0;
 
   // Small facts about the visible list
@@ -235,12 +255,15 @@ export default function TransactionsPage() {
   return (
     <main className="page">
       <PageHeader title={t("Transactions")} subtitle={t("Every income and expense you recorded.")}>
-        {!allTime && <MonthPicker value={month} onChange={setMonth} compact />}
+        {!allTime && !range && <MonthPicker value={month} onChange={setMonth} compact />}
         <button
-          onClick={() => setAllTime(!allTime)}
-          aria-pressed={allTime}
+          onClick={() => {
+            setRange(null);
+            setAllTime(!allTime || !!range);
+          }}
+          aria-pressed={allTime && !range}
           className={`h-8 shrink-0 rounded-xl border px-3 text-xs font-semibold transition ${
-            allTime ? "border-ink bg-ink text-white" : "border-line bg-white text-muted hover:text-ink"
+            allTime && !range ? "border-ink bg-ink text-white" : "border-line bg-white text-muted hover:text-ink"
           }`}
         >
           {t("All time")}
@@ -326,9 +349,9 @@ export default function TransactionsPage() {
       </section>
 
       {/* Spending calendar of the month (follows the filters) */}
-      {!allTime && transactions && transactions.some((tx) => tx.type === "expense") && (
+      {calendarMonth && transactions && transactions.some((tx) => tx.type === "expense") && (
         <div className="mt-3" data-tour="tx-calendar">
-          <SpendingCalendar month={month} transactions={transactions} />
+          <SpendingCalendar month={calendarMonth} transactions={transactions} />
         </div>
       )}
 
@@ -355,6 +378,13 @@ export default function TransactionsPage() {
               </button>
             )}
           </div>
+          <DateFilter
+            value={range}
+            onChange={(next) => {
+              setRange(next);
+              if (next) setAllTime(false);
+            }}
+          />
           <div className="flex rounded-xl bg-background p-1" role="radiogroup" aria-label={t("Type")}>
             {(["all", "income", "expense"] as const).map((value) => (
               <button
