@@ -9,6 +9,7 @@ from services.ai_client import AIServiceError, is_configured, provider
 from services.image import InvalidImageError, prepare_image
 from services.receipts import analyze_receipt
 from services.reports import analyze_month
+from services.chat import answer_question
 
 # override=True: the auto-reloader keeps old values otherwise, so .env changes would need a full restart
 load_dotenv(override=True)
@@ -69,6 +70,17 @@ def reports_analyze():
     if not isinstance(statistics, dict) or "totals" not in statistics:
         return jsonify({"error": "statistics are missing"}), 400
     return jsonify(analyze_month(statistics, body.get("language", "en")))
+
+
+@app.post("/chat")
+def chat():
+    body = request.get_json(silent=True) or {}
+    message = body.get("message")
+    context = body.get("context")
+    if not isinstance(message, str) or not message.strip() or not isinstance(context, dict):
+        return jsonify({"error": "message and context are required"}), 400
+    history = body.get("history") if isinstance(body.get("history"), list) else []
+    return jsonify(answer_question(message.strip()[:500], history, context, body.get("language", "en")))
 
 
 if __name__ == "__main__":

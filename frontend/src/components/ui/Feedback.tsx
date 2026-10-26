@@ -69,7 +69,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         </div>
       </Modal>
 
-      <div aria-live="polite" className="fixed bottom-24 left-1/2 z-[60] lg:bottom-4 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:left-auto sm:right-4 sm:translate-x-0">
+      <div aria-live="polite" className="fixed bottom-40 left-1/2 z-[60] lg:bottom-24 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:left-auto sm:right-4 sm:translate-x-0">
         {toasts.map((toastItem) => (
           <div
             key={toastItem.id}

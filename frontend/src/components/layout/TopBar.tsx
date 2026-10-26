@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BellRing, ChevronDown, CircleAlert, Download, LogOut, Menu, TriangleAlert, UserRound, Wallet } from "lucide-react";
+import { Bell, BellRing, ChevronDown, CircleAlert, Compass, Download, LogOut, Menu, TriangleAlert, UserRound, Wallet } from "lucide-react";
+import { START_TOUR_EVENT } from "@/components/tour/AppTour";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
@@ -184,6 +185,16 @@ function ProfileMenu() {
               <Download size={16} className="text-muted" />
               {t("Export my data")}
             </Link>
+            <button
+              onClick={() => {
+                setOpen(false);
+                window.dispatchEvent(new Event(START_TOUR_EVENT));
+              }}
+              className={item}
+            >
+              <Compass size={16} className="text-muted" />
+              {t("Take the tour")}
+            </button>
             <div className="flex items-center justify-between px-3 py-2 sm:hidden">
               <span className="text-sm text-ink">{t("Currency")}</span>
               <CurrencySwitch />
@@ -260,11 +271,17 @@ export default function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <Greeting />
 
         <div className="ms-auto flex items-center gap-2">
-          <ThemeToggle className="hidden sm:flex" />
-          <LanguageSwitch className="hidden sm:block" />
-          <CurrencySwitch className="hidden sm:inline-flex" />
-          <NotificationsBell key={pathname === "/budgets" ? "budgets" : "app"} />
-          <ProfileMenu />
+          <div data-tour="preferences" className="hidden items-center gap-2 sm:flex">
+            <ThemeToggle />
+            <LanguageSwitch />
+            <CurrencySwitch />
+          </div>
+          <div data-tour="notifications">
+            <NotificationsBell key={pathname === "/budgets" ? "budgets" : "app"} />
+          </div>
+          <div data-tour="profile">
+            <ProfileMenu />
+          </div>
         </div>
       </div>
     </header>

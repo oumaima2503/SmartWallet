@@ -112,3 +112,13 @@ CREATE TABLE IF NOT EXISTS ai_reports (
 
 -- Profile photo (small data URL, resized in the browser)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+
+-- AI assistant conversation (one thread per user)
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(10) NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS chat_messages_user_idx ON chat_messages (user_id, id);

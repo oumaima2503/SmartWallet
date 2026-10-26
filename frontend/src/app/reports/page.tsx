@@ -129,7 +129,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4" data-tour="report-main">
         {state === "loading" && (
           <div className="space-y-4">
             <Skeleton className="h-60 rounded-2xl" />

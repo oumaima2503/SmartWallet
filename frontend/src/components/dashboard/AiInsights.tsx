@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CircleAlert, Lightbulb, Sparkles, ThumbsUp } from "lucide-react";
+import { ArrowRight, CircleAlert, Lightbulb, Sparkles, ThumbsUp, MessageCircle } from "lucide-react";
+import { OPEN_CHAT_EVENT } from "@/components/chat/ChatAssistant";
 import { api } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
 import { formatMonth } from "@/lib/format";
@@ -88,13 +89,22 @@ export default function AiInsights({ month }: { month: string }) {
           </p>
         )}
 
-        <Link
-          href="/reports"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 self-start rounded-xl bg-white px-3.5 text-xs font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 lg:self-center"
-        >
-          {report ? t("Full report") : t("Generate report")}
-          <ArrowRight size={14} />
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-2 self-start lg:flex-col lg:self-center">
+          <Link
+            href="/reports"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white px-3.5 text-xs font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50"
+          >
+            {report ? t("Full report") : t("Generate report")}
+            <ArrowRight size={14} />
+          </Link>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CHAT_EVENT))}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/15 px-3.5 text-xs font-semibold text-white transition hover:bg-white/25"
+          >
+            <MessageCircle size={14} />
+            {t("Ask the assistant")}
+          </button>
+        </div>
       </div>
     </Hero>
   );

@@ -36,23 +36,15 @@
   --color-red-50: #2a1416;
   --color-red-100: #3a1a1d;
   --color-red-200: #4d2226;
-  --color-red-700: #fca5a5;
   --color-rose-50: #2a1419;
   --color-rose-100: #3a1a21;
-  --color-rose-700: #fda4af;
   --color-amber-50: #2a2010;
   --color-amber-100: #3a2c12;
   --color-amber-200: #4d3a17;
-  --color-amber-700: #fcd34d;
-  --color-amber-800: #fcd34d;
-  --color-amber-950: #fef3c7;
   --color-violet-50: #1f1830;
   --color-violet-100: #2a2042;
-  --color-violet-700: #c4b5fd;
   --color-sky-50: #0f2230;
   --color-sky-100: #14304a;
-  --color-sky-700: #7dd3fc;
-  --color-sky-900: #bae6fd;
   --color-emerald-50: #10291c;
 }
 
@@ -301,6 +293,30 @@ input:focus-visible {
 .dark .bg-ink {
   background-color: #2c4537;
 }
+/* Dark text shades become light, for text only (the same shades stay dark in gradients and buttons) */
+.dark .text-red-700 { color: #fca5a5; }
+.dark .text-rose-700 { color: #fda4af; }
+.dark .text-rose-600,
+.dark .text-rose-500 { color: #fb7185; }
+.dark .text-amber-700,
+.dark .text-amber-800 { color: #fcd34d; }
+.dark .text-amber-950 { color: #fef3c7; }
+.dark .text-amber-600 { color: #fbbf24; }
+.dark .text-violet-700,
+.dark .text-violet-600 { color: #c4b5fd; }
+.dark .text-sky-700,
+.dark .text-sky-900 { color: #bae6fd; }
+.dark .text-sky-600 { color: #7dd3fc; }
+.dark .border-violet-100,
+.dark .border-sky-100,
+.dark .border-violet-200 { border-color: #33295a; }
+/* White buttons inside colored panels keep their original dark text */
+.dark [class*="from-violet"] .bg-white.text-violet-700,
+.dark [class*="from-violet"] .bg-white .text-violet-700 { color: #6d28d9; }
+.dark [class*="from-brand"] .bg-white.text-brand-dark,
+.dark [class*="from-brand"] .bg-white .text-brand-dark { color: #07683a; }
+.dark [class*="from-brand"] .bg-white.text-brand,
+.dark [class*="from-brand"] .bg-white .text-brand { color: #0a8f4f; }
 .dark .text-brand-dark {
   color: #5fd39a;
 }

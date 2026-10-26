@@ -75,6 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(
     async (name: string, email: string, password: string) => {
       await api("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) });
+      // New account: the app tour starts on the first page (see components/tour/AppTour.tsx)
+      try {
+        localStorage.setItem("smartwallet.tour.pending", "1");
+      } catch {
+        // ignore
+      }
       setUser(await api<User>("/api/users/me"));
     },
     [setUser]

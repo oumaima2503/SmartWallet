@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import ChatAssistant from "@/components/chat/ChatAssistant";
+import AppTour from "@/components/tour/AppTour";
 
 // Pages anyone can open
 const PUBLIC_PAGES = ["/welcome", "/login", "/register"];
@@ -48,6 +50,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <TopBar onOpenMenu={() => setDrawerOpen(true)} />
         {children}
       </div>
+      <ChatAssistant />
+      <AppTour />
     </div>
   );
 }

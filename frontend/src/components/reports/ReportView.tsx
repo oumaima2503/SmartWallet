@@ -172,7 +172,7 @@ export default function ReportView({ report, actions }: Props) {
           ))}
         </div>
 
-        <div className="relative mt-4 rounded-xl bg-white p-4 text-ink">
+        <div className="relative mt-4 rounded-xl bg-surface p-4 text-ink">
           <div className="mb-1.5 flex items-center gap-2">
             <AiTag />
             <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">{t("Summary")}</span>
@@ -283,7 +283,7 @@ export default function ReportView({ report, actions }: Props) {
       <SectionCard icon={Lightbulb} color="bg-violet-50 text-violet-600" title={t("Recommendations for next month")} tag={<AiTag />}>
         <ol className="grid gap-3 md:grid-cols-2">
           {a.recommendations.map((rec, i) => (
-            <li key={i} className="relative overflow-hidden rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 text-sm">
+            <li key={i} className="relative overflow-hidden rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-surface p-4 text-sm">
               <span className="absolute end-3 top-2 text-3xl font-black text-violet-100">{i + 1}</span>
               <p className="relative pe-8 font-semibold text-ink">{rec.action}</p>
               <p className="relative mt-1 text-ink/80">{rec.reason}</p>

@@ -159,7 +159,7 @@ export default function GoalsPage() {
       )}
 
       {data && data.goals.length === 0 && (
-        <div className="mt-5">
+        <div className="mt-5" data-tour="goals-main">
           <EmptyState
             icon={Target}
             illustration="goal"
@@ -177,7 +177,9 @@ export default function GoalsPage() {
 
       {data && data.goals.length > 0 && (
         <>
-          <GoalsHero data={data} money={money} />
+          <div data-tour="goals-main">
+            <GoalsHero data={data} money={money} />
+          </div>
 
           {active.length > 0 && (
             <section className="mt-6">

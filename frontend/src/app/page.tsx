@@ -75,7 +75,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between gap-3">
         {/* Phones have no greeting in the top bar */}
         <p className="truncate text-sm text-muted lg:hidden">{name ? `${t("Hi {name}", { name: name.split(" ")[0] })} 👋` : ""}</p>
-        <div className="ms-auto">
+        <div className="ms-auto" data-tour="dash-month">
           <MonthPicker value={month} onChange={setMonth} compact />
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           <GettingStarted data={data} />
 
           {/* Key numbers */}
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" data-tour="dash-kpis">
             <div className="col-span-2 xl:col-span-1">
               <BalanceCard
                 income={data.totals.income}
@@ -140,7 +140,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Charts */}
-          <div className="grid gap-4 xl:grid-cols-12">
+          <div className="grid gap-4 xl:grid-cols-12" data-tour="dash-charts">
             <div className="min-w-0 xl:col-span-7">
               <ExpensesChart trend={data.monthly_trend} selectedMonth={data.month} onSelectMonth={setMonth} />
             </div>
@@ -149,7 +149,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <AiInsights month={data.month} />
+          <div data-tour="dash-ai">
+            <AiInsights month={data.month} />
+          </div>
 
           {/* Details */}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

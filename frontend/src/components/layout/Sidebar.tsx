@@ -91,6 +91,7 @@ function NavGroups({
                 <Link
                   key={link.href}
                   href={link.href}
+                  data-tour={`nav-${link.href === "/" ? "dashboard" : link.href.slice(1)}`}
                   onClick={onNavigate}
                   title={compact ? t(link.label) : undefined}
                   aria-label={compact ? t(link.label) : undefined}
@@ -117,6 +118,7 @@ function ScanButton({ active, compact = false, onClick }: { active: boolean; com
     return (
       <Link
         href="/receipts"
+        data-tour="scan"
         onClick={onClick}
         title={t("Scan a receipt")}
         aria-label={t("Scan a receipt")}
@@ -130,6 +132,7 @@ function ScanButton({ active, compact = false, onClick }: { active: boolean; com
   return (
     <Link
       href="/receipts"
+      data-tour="scan"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className="flex items-center gap-3 rounded-xl bg-gradient-to-br from-brand-dark to-brand p-3 text-white shadow-md shadow-brand/25 transition hover:brightness-110"
@@ -280,6 +283,7 @@ export default function Sidebar({ drawerOpen, onCloseDrawer }: Props) {
                 <div key="scan" className="flex justify-center">
                   <Link
                     href="/receipts"
+                    data-tour="scan"
                     aria-label={t("Scan a receipt")}
                     className={`-mt-5 flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg shadow-brand/40 ring-4 ring-white transition active:scale-95 ${
                       isActive("/receipts") ? "bg-brand-dark" : "bg-gradient-to-br from-brand-dark to-brand"
@@ -296,6 +300,7 @@ export default function Sidebar({ drawerOpen, onCloseDrawer }: Props) {
               <Link
                 key={link.href}
                 href={link.href}
+                data-tour={`nav-${link.href === "/" ? "dashboard" : link.href.slice(1)}`}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                   active ? "text-brand-dark" : "text-muted"

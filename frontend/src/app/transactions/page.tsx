@@ -250,14 +250,14 @@ export default function TransactionsPage() {
         >
           <ScanLine size={14} />
         </Link>
-        <Button size="xs" onClick={() => setModal("add")} className="ms-auto sm:ms-0">
+        <Button size="xs" onClick={() => setModal("add")} className="ms-auto sm:ms-0" data-tour="tx-add">
           <Plus size={14} />
           {t("Add")}
         </Button>
       </PageHeader>
 
       {/* Summary: one slim row (balance + 3 small insight tiles) */}
-      <section className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]">
+      <section data-tour="tx-summary" className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]">
         <Hero compact className="col-span-3 lg:col-span-1">
           <div className="relative flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -321,13 +321,13 @@ export default function TransactionsPage() {
 
       {/* Spending calendar of the month (follows the filters) */}
       {!allTime && transactions && transactions.some((tx) => tx.type === "expense") && (
-        <div className="mt-3">
+        <div className="mt-3" data-tour="tx-calendar">
           <SpendingCalendar month={month} transactions={transactions} />
         </div>
       )}
 
       {/* Filters: search, type, category chips */}
-      <section className="mt-3 rounded-2xl border border-line bg-white p-3">
+      <section data-tour="tx-filters" className="mt-3 rounded-2xl border border-line bg-white p-3">
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Search size={15} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -393,7 +393,7 @@ export default function TransactionsPage() {
       </section>
 
       {/* List */}
-      <section className="mt-3">
+      <section className="mt-3" data-tour="tx-list">
         {error && !transactions && <ErrorState message={`${t("We couldn't load your transactions.")} ${error}`} onRetry={loadTransactions} />}
 
         {!transactions && !error && (

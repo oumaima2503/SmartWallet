@@ -157,8 +157,12 @@ export default function ReceiptsPage() {
 
       {step === "upload" && (
         <div className="mt-6">
-          <UploadZone onFile={handleFile} />
-          <ReceiptHistory onContinue={continueReceipt} />
+          <div data-tour="scan-upload">
+            <UploadZone onFile={handleFile} />
+          </div>
+          <div data-tour="scan-history">
+            <ReceiptHistory onContinue={continueReceipt} />
+          </div>
         </div>
       )}
 

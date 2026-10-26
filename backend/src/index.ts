@@ -11,6 +11,7 @@ import dashboardRouter from "./routes/dashboard";
 import categoriesRouter from "./routes/categories";
 import receiptsRouter from "./routes/receipts";
 import reportsRouter from "./routes/reports";
+import chatRouter from "./routes/chat";
 import transactionsRouter from "./routes/transactions";
 import budgetsRouter from "./routes/budgets";
 
@@ -89,6 +90,7 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/receipts", receiptsRouter);
 app.use("/api/reports", reportsRouter);
+app.use("/api/chat", chatRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/currency", currencyRouter);
 app.use("/api/transactions", transactionsRouter);

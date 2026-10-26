@@ -151,7 +151,7 @@ export default function BudgetsPage() {
     <main className="page">
       <PageHeader title={t("Budgets")} subtitle={t("Set monthly limits and see how much is left.")}>
         <MonthPicker value={month} onChange={setMonth} compact />
-        <Button size="xs" onClick={() => setModal({ mode: "add" })} className="shrink-0">
+        <Button size="xs" onClick={() => setModal({ mode: "add" })} className="shrink-0" data-tour="budget-add">
           <Plus size={14} />
           <span className="hidden sm:inline">{t("New budget")}</span>
         </Button>
@@ -175,7 +175,7 @@ export default function BudgetsPage() {
       )}
 
       {budgets && budgets.length === 0 && (
-        <div className="mt-5">
+        <div className="mt-5" data-tour="budget-main">
           <EmptyState
             icon={PiggyBank}
             illustration="budget"
@@ -200,7 +200,7 @@ export default function BudgetsPage() {
       )}
 
       {budgets && budgets.length > 0 && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-4" data-tour="budget-main">
           {/* Overall budget */}
           {overall ? (
             <OverallCard budget={overall} daysLeft={left} onEdit={() => setModal({ mode: "edit", budget: overall })} onDelete={() => remove(overall)} />

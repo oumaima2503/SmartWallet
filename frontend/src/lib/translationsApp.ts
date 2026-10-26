@@ -305,6 +305,196 @@ export const APP_TEXT: Record<string, [string, string]> = {
   "Photo removed.": ["Photo retirée.", "تمت إزالة الصورة."],
   "Amounts are now shown in {currency}.": ["Les montants sont maintenant affichés en {currency}.", "تُعرض المبالغ الآن بـ {currency}."],
 
+  // App tour (first visit)
+  "App tour": ["Visite de l'application", "جولة في التطبيق"],
+  "Take the tour": ["Visite guidée", "جولة تعريفية"],
+  "Step {current} of {total}": ["Étape {current} sur {total}", "الخطوة {current} من {total}"],
+  "Skip the tour": ["Passer la visite", "تخطي الجولة"],
+  "Start the tour": ["Commencer", "ابدأ الجولة"],
+  Next: ["Suivant", "التالي"],
+  Back: ["Retour", "رجوع"],
+  "Add my income": ["Ajouter mes revenus", "أضف مداخيلي"],
+  "On this screen, you'll find it in the menu ☰.": ["Sur cet écran, vous le trouverez dans le menu ☰.", "في هذه الشاشة، ستجده في القائمة ☰."],
+  "On this screen, tap your profile photo at the top to find these options.": [
+    "Sur cet écran, touchez votre photo de profil en haut pour trouver ces options.",
+    "في هذه الشاشة، اضغط على صورة ملفك الشخصي في الأعلى لتجد هذه الخيارات.",
+  ],
+  "Welcome to SmartWallet, {name}!": ["Bienvenue sur SmartWallet, {name} !", "مرحباً بك في SmartWallet يا {name}!"],
+  "I'm your SmartWallet guide. Let me show you around in one minute. You can skip at any time.": [
+    "Je suis votre guide SmartWallet. Je vous fais visiter en une minute. Vous pouvez passer à tout moment.",
+    "أنا مرشدك في SmartWallet. دعني أريك التطبيق في دقيقة واحدة. يمكنك التخطي في أي وقت.",
+  ],
+  "Your dashboard": ["Votre tableau de bord", "لوحة التحكم الخاصة بك"],
+  "Your balance, income, expenses, budgets and goals for the month, all on one page.": [
+    "Votre solde, vos revenus, dépenses, budgets et objectifs du mois, sur une seule page.",
+    "رصيدك ومداخيلك ومصاريفك وميزانياتك وأهدافك لهذا الشهر، في صفحة واحدة.",
+  ],
+  "Record every income and expense, search them and see which days you spend the most.": [
+    "Enregistrez chaque revenu et dépense, cherchez-les et voyez les jours où vous dépensez le plus.",
+    "سجّل كل مدخول ومصروف، وابحث فيها واعرف الأيام التي تنفق فيها أكثر.",
+  ],
+  "Take a photo of a receipt: the AI reads the store, date and total and suggests a category. You just confirm.": [
+    "Prenez un reçu en photo : l'IA lit le magasin, la date et le total et propose une catégorie. Vous n'avez qu'à confirmer.",
+    "صوّر إيصالاً: يقرأ الذكاء الاصطناعي المتجر والتاريخ والمجموع ويقترح فئة. عليك فقط التأكيد.",
+  ],
+  "Set a monthly limit, overall or per category. You get an alert at 80% and when you go over.": [
+    "Fixez une limite mensuelle, globale ou par catégorie. Vous êtes alerté à 80 % et en cas de dépassement.",
+    "حدد سقفاً شهرياً، عاماً أو لكل فئة. ستصلك تنبيهات عند 80% وعند التجاوز.",
+  ],
+  "Saving for a laptop, a trip or an emergency fund? Add money to a goal and follow your progress.": [
+    "Vous épargnez pour un ordinateur, un voyage ou une épargne de précaution ? Ajoutez de l'argent à un objectif et suivez vos progrès.",
+    "تدخر لحاسوب أو سفر أو صندوق طوارئ؟ أضف المال إلى هدف وتابع تقدمك.",
+  ],
+  "Each month, the AI explains your real numbers: what changed, which budgets to watch and what to improve.": [
+    "Chaque mois, l'IA explique vos vrais chiffres : ce qui a changé, les budgets à surveiller et quoi améliorer.",
+    "كل شهر، يشرح الذكاء الاصطناعي أرقامك الحقيقية: ما الذي تغير، وأي الميزانيات تحتاج انتباهاً، وما الذي يمكن تحسينه.",
+  ],
+  "This bell lights up when a budget gets close to its limit or goes over it.": [
+    "Cette cloche s'allume quand un budget approche de sa limite ou la dépasse.",
+    "يضيء هذا الجرس عندما تقترب ميزانية من حدها أو تتجاوزه.",
+  ],
+  "Make it yours": ["À votre goût", "اجعله على ذوقك"],
+  "Switch between light and dark mode, choose your language and show amounts in MAD, euros or dollars.": [
+    "Passez du mode clair au mode sombre, choisissez votre langue et affichez les montants en MAD, euros ou dollars.",
+    "بدّل بين الوضع الفاتح والداكن، واختر لغتك واعرض المبالغ بالدرهم أو اليورو أو الدولار.",
+  ],
+  "Ask the AI assistant": ["Demandez à l'assistant IA", "اسأل المساعد الذكي"],
+  'Have a question about your money? Ask me here, for example: "How much did I spend this month?"': [
+    "Une question sur votre argent ? Posez-la-moi ici, par exemple : « Combien ai-je dépensé ce mois-ci ? »",
+    "لديك سؤال عن أموالك؟ اسألني هنا، مثلاً: «كم أنفقت هذا الشهر؟»",
+  ],
+  "You're all set!": ["Tout est prêt !", "كل شيء جاهز!"],
+  "Start by adding your income, then set a budget for the month. You can replay this tour from your profile menu.": [
+    "Commencez par ajouter vos revenus, puis fixez un budget pour le mois. Vous pouvez revoir cette visite depuis le menu de votre profil.",
+    "ابدأ بإضافة مداخيلك، ثم حدد ميزانية للشهر. يمكنك إعادة هذه الجولة من قائمة ملفك الشخصي.",
+  ],
+  "Budget alerts": ["Alertes budget", "تنبيهات الميزانية"],
+  Everywhere: ["Partout", "في كل مكان"],
+  "AI assistant": ["Assistant IA", "المساعد الذكي"],
+  "Opening the page...": ["Ouverture de la page...", "جارٍ فتح الصفحة..."],
+  "Pick a month": ["Choisissez un mois", "اختر شهراً"],
+  "Open the calendar to see the numbers of any month.": ["Ouvrez le calendrier pour voir les chiffres de n'importe quel mois.", "افتح التقويم لرؤية أرقام أي شهر."],
+  "Your month in numbers": ["Votre mois en chiffres", "شهرك بالأرقام"],
+  "Balance, income, expenses and money saved, compared with last month.": [
+    "Solde, revenus, dépenses et argent épargné, comparés au mois dernier.",
+    "الرصيد والمداخيل والمصاريف والمدخرات، مقارنة بالشهر الماضي.",
+  ],
+  Charts: ["Graphiques", "الرسوم البيانية"],
+  "Income vs expenses over 6 months (tap a month to open it) and where your money goes by category.": [
+    "Revenus vs dépenses sur 6 mois (touchez un mois pour l'ouvrir) et où va votre argent par catégorie.",
+    "المداخيل مقابل المصاريف خلال 6 أشهر (اضغط على شهر لفتحه) وأين يذهب مالك حسب الفئة.",
+  ],
+  "A short summary of your monthly AI report: what goes well and what to watch.": [
+    "Un court résumé de votre rapport IA du mois : ce qui va bien et ce qu'il faut surveiller.",
+    "ملخص قصير لتقريرك الشهري بالذكاء الاصطناعي: ما يسير جيداً وما يحتاج انتباهاً.",
+  ],
+  "Every income and expense you record is listed here.": ["Chaque revenu et dépense que vous enregistrez est listé ici.", "كل مدخول ومصروف تسجله يظهر هنا."],
+  "Add an income or an expense in a few seconds. The buttons next to it scan a receipt or manage your categories.": [
+    "Ajoutez un revenu ou une dépense en quelques secondes. Les boutons à côté scannent un reçu ou gèrent vos catégories.",
+    "أضف مدخولاً أو مصروفاً في ثوانٍ. الأزرار المجاورة تمسح إيصالاً أو تدير فئاتك.",
+  ],
+  "The period at a glance": ["La période en un coup d'œil", "الفترة في لمحة"],
+  "Your balance, biggest expense, top category and the store you visit most.": [
+    "Votre solde, votre plus grosse dépense, votre première catégorie et le magasin où vous allez le plus.",
+    "رصيدك وأكبر مصروف وأهم فئة والمتجر الذي تزوره أكثر.",
+  ],
+  "Darker days are the days you spent the most. You also see your average per day and your no-spend days.": [
+    "Les jours les plus foncés sont ceux où vous avez le plus dépensé. Vous voyez aussi votre moyenne par jour et vos jours sans dépense.",
+    "الأيام الأغمق هي التي أنفقت فيها أكثر. ترى أيضاً معدلك اليومي وأيامك بلا مصاريف.",
+  ],
+  "Search and filters": ["Recherche et filtres", "البحث والتصفية"],
+  "Find any transaction by store or description, or filter by type and category.": [
+    "Retrouvez une transaction par magasin ou description, ou filtrez par type et catégorie.",
+    "ابحث عن أي معاملة بالمتجر أو الوصف، أو صفِّ حسب النوع والفئة.",
+  ],
+  "Your timeline": ["Votre chronologie", "الخط الزمني"],
+  "Transactions are grouped by week. Click a card to edit or delete it.": [
+    "Les transactions sont groupées par semaine. Cliquez sur une carte pour la modifier ou la supprimer.",
+    "المعاملات مجمعة حسب الأسبوع. اضغط على بطاقة لتعديلها أو حذفها.",
+  ],
+  "Take or upload a photo": ["Prenez ou envoyez une photo", "التقط أو ارفع صورة"],
+  "Use your camera or choose a photo. Any currency works, and you check every detail before it is saved.": [
+    "Utilisez votre caméra ou choisissez une photo. Toutes les devises marchent, et vous vérifiez chaque détail avant l'enregistrement.",
+    "استخدم الكاميرا أو اختر صورة. كل العملات مقبولة، وتتحقق من كل التفاصيل قبل الحفظ.",
+  ],
+  "Every receipt you scanned, saved or not. You can finish an unsaved one at any time.": [
+    "Tous les reçus scannés, enregistrés ou non. Vous pouvez terminer un reçu non enregistré à tout moment.",
+    "كل الإيصالات التي مسحتها، محفوظة أو لا. يمكنك إكمال غير المحفوظ في أي وقت.",
+  ],
+  "Choose the month, then add an overall limit or a limit for one category.": [
+    "Choisissez le mois, puis ajoutez une limite globale ou une limite pour une catégorie.",
+    "اختر الشهر، ثم أضف حداً عاماً أو حداً لفئة واحدة.",
+  ],
+  "Follow every limit": ["Suivez chaque limite", "تابع كل حد"],
+  "Each ring shows how much of a budget is used. It turns orange at 80% and red when you go over.": [
+    "Chaque anneau montre la part du budget utilisée. Il devient orange à 80 % et rouge en cas de dépassement.",
+    "كل حلقة تبين الجزء المستخدم من الميزانية. تصبح برتقالية عند 80% وحمراء عند التجاوز.",
+  ],
+  "Your goals": ["Vos objectifs", "أهدافك"],
+  "See how much you saved, what is left and how much to put aside each month. Add money in one click.": [
+    "Voyez combien vous avez épargné, ce qu'il reste et combien mettre de côté chaque mois. Ajoutez de l'argent en un clic.",
+    "اعرف كم ادخرت وكم تبقى وكم تضع جانباً كل شهر. أضف المال بنقرة واحدة.",
+  ],
+  "Your monthly report": ["Votre rapport mensuel", "تقريرك الشهري"],
+  "Generate the report of the selected month. The numbers are calculated by the app, the AI explains them, and you can download it as a PDF.": [
+    "Générez le rapport du mois choisi. Les chiffres sont calculés par l'application, l'IA les explique, et vous pouvez le télécharger en PDF.",
+    "أنشئ تقرير الشهر المختار. يحسب التطبيق الأرقام ويشرحها الذكاء الاصطناعي، ويمكنك تحميله بصيغة PDF.",
+  ],
+  "Have a question about your money? This button opens the assistant on every page.": [
+    "Une question sur votre argent ? Ce bouton ouvre l'assistant sur toutes les pages.",
+    "لديك سؤال عن أموالك؟ هذا الزر يفتح المساعد في كل الصفحات.",
+  ],
+  "Connected to your data": ["Connecté à vos données", "متصل ببياناتك"],
+  "The assistant reads your transactions, budgets and goals live. The trash icon starts a new conversation.": [
+    "L'assistant lit vos transactions, budgets et objectifs en direct. L'icône corbeille démarre une nouvelle conversation.",
+    "يقرأ المساعد معاملاتك وميزانياتك وأهدافك مباشرة. أيقونة سلة المهملات تبدأ محادثة جديدة.",
+  ],
+  "Ask anything": ["Demandez ce que vous voulez", "اسأل أي شيء"],
+  "Start with a suggested question or write your own. Amounts are highlighted, and follow-up ideas appear after each answer.": [
+    "Commencez par une question suggérée ou écrivez la vôtre. Les montants sont mis en valeur et des idées de questions apparaissent après chaque réponse.",
+    "ابدأ بسؤال مقترح أو اكتب سؤالك. تُبرز المبالغ، وتظهر أفكار لأسئلة أخرى بعد كل إجابة.",
+  ],
+  "Write your question": ["Écrivez votre question", "اكتب سؤالك"],
+  "Type here and press Enter. Answers come in your language and your currency.": [
+    "Écrivez ici et appuyez sur Entrée. Les réponses arrivent dans votre langue et votre devise.",
+    "اكتب هنا واضغط Enter. تأتي الإجابات بلغتك وعملتك.",
+  ],
+
+  // AI assistant (chat)
+  "Ask the assistant": ["Demander à l'assistant", "اسأل المساعد"],
+  "SmartWallet AI": ["SmartWallet IA", "SmartWallet AI"],
+  "Ask about your money": ["Questions sur votre argent", "اسأل عن أموالك"],
+  "Hi {name}!": ["Salut {name} !", "مرحباً {name}!"],
+  "Ask me anything about your money.": ["Posez-moi vos questions sur votre argent.", "اسألني أي شيء عن أموالك."],
+  "Online · reads your data live": ["En ligne · lit vos données en direct", "متصل · يقرأ بياناتك مباشرة"],
+  "Connected to": ["Connecté à", "متصل بـ"],
+  "Checking your numbers...": ["Je vérifie vos chiffres...", "أتحقق من أرقامك..."],
+  "SmartWallet assistant": ["Assistant SmartWallet", "مساعد SmartWallet"],
+  "Answers from your own data": ["Réponses basées sur vos données", "إجابات من بياناتك الخاصة"],
+  "Start a new conversation": ["Nouvelle conversation", "محادثة جديدة"],
+  "Start a new conversation?": ["Commencer une nouvelle conversation ?", "بدء محادثة جديدة؟"],
+  "Your previous questions and answers will be deleted. Your financial data is not affected.": [
+    "Vos questions et réponses précédentes seront supprimées. Vos données financières ne changent pas.",
+    "ستُحذف أسئلتك وإجاباتك السابقة. لن تتأثر بياناتك المالية.",
+  ],
+  "Ask me about your money": ["Posez-moi une question sur votre argent", "اسألني عن أموالك"],
+  "I read your transactions, budgets and savings goals to answer. Try one of these:": [
+    "Je lis vos transactions, budgets et objectifs d'épargne pour répondre. Essayez l'une de ces questions :",
+    "أقرأ معاملاتك وميزانياتك وأهداف ادخارك للإجابة. جرّب أحد هذه الأسئلة:",
+  ],
+  "How much did I spend this month?": ["Combien ai-je dépensé ce mois-ci ?", "كم أنفقت هذا الشهر؟"],
+  "Which budget is closest to its limit?": ["Quel budget est le plus proche de sa limite ?", "أي ميزانية هي الأقرب إلى حدها؟"],
+  "Where does most of my money go?": ["Où va la plus grande partie de mon argent ?", "أين يذهب معظم مالي؟"],
+  "How much should I save each month for my goals?": ["Combien dois-je épargner par mois pour mes objectifs ?", "كم يجب أن أدخر كل شهر لأهدافي؟"],
+  "The assistant is writing...": ["L'assistant écrit...", "المساعد يكتب..."],
+  "Type your question...": ["Écrivez votre question...", "اكتب سؤالك..."],
+  "Your question": ["Votre question", "سؤالك"],
+  Send: ["Envoyer", "إرسال"],
+  "General budgeting tips only, not professional financial advice.": [
+    "Conseils généraux de budget uniquement, pas de conseil financier professionnel.",
+    "نصائح عامة للميزانية فقط، وليست استشارة مالية مهنية.",
+  ],
+
   // Default categories (names stored in English in the database)
   Salary: ["Salaire", "الراتب"],
   Freelance: ["Freelance", "عمل حر"],
