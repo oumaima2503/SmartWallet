@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Target } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, peekCache } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
 import { SavingsGoalsResponse } from "@/types/savings";
 import PageHeader from "@/components/layout/PageHeader";
@@ -109,6 +109,8 @@ export default function GoalsPage() {
 
   const loadGoals = useCallback(async () => {
     try {
+      const cached = peekCache<SavingsGoalsResponse>("/api/savings-goals");
+      if (cached) setData(cached.data);
       setData(await api<SavingsGoalsResponse>("/api/savings-goals"));
       setError("");
     } catch (err) {

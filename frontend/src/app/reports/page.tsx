@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CloudOff, Download, FileText, RefreshCw, Sparkles } from "lucide-react";
-import { api, ApiError } from "@/lib/api";
+import { api, peekCache, ApiError } from "@/lib/api";
 import { currentMonthString, formatMonth } from "@/lib/format";
 import { useCurrency } from "@/lib/currency";
 import { downloadReportPdf } from "@/lib/reportPdf";
@@ -31,6 +31,8 @@ export default function ReportsPage() {
   const [history, setHistory] = useState<ReportSummary[]>([]);
 
   const loadHistory = useCallback(async () => {
+    const cached = peekCache<ReportSummary[]>("/api/reports");
+    if (cached) setHistory(cached.data);
     try {
       setHistory(await api<ReportSummary[]>("/api/reports"));
     } catch {
@@ -40,7 +42,14 @@ export default function ReportsPage() {
 
   // Reopens a saved report (no AI call). The API returns null when the month has no report yet.
   const loadReport = useCallback(async () => {
-    setState("loading");
+    // A report seen before shows at once (it only changes when regenerated)
+    const cached = peekCache<Report | null>(`/api/reports/${month}`);
+    if (cached) {
+      setReport(cached.data);
+      setState(cached.data ? "ready" : "none");
+    } else {
+      setState("loading");
+    }
     setError("");
     try {
       const saved = await api<Report | null>(`/api/reports/${month}`);

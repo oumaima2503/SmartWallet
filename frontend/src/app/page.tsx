@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PiggyBank, TrendingDown, TrendingUp } from "lucide-react";
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import KpiCard from "@/components/dashboard/KpiCard";
-import { api } from "@/lib/api";
+import { api, peekCache } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
 import { t, useT } from "@/lib/i18n";
 import { currentMonthString, formatMonth } from "@/lib/format";
@@ -50,7 +50,11 @@ export default function DashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     try {
-      setData(await api<DashboardData>(`/api/dashboard?month=${month}`));
+      const path = `/api/dashboard?month=${month}`;
+      // Show the last known numbers at once, then the fresh ones
+      const cached = peekCache<DashboardData>(path);
+      if (cached) setData(cached.data);
+      setData(await api<DashboardData>(path));
       setError("");
     } catch (err) {
       setError((err as Error).message);

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, ApiError, AUTH_EXPIRED_EVENT } from "@/lib/api";
+import { api, ApiError, AUTH_EXPIRED_EVENT, clearApiCache } from "@/lib/api";
 
 // Who is logged in. The session itself is an httpOnly cookie set by the backend,
 // so the browser can't read it: we ask GET /api/users/me instead.
@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clear = useCallback(() => {
+    clearApiCache();
     setUserState(null);
     setStatus("anonymous");
   }, []);
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
+      clearApiCache();
       await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
       // The full profile (with the photo) comes from /me
       setUser(await api<User>("/api/users/me"));

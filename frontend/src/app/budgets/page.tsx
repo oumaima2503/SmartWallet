@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CircleAlert, Copy, Pencil, PiggyBank, Plus, Target, Trash2, TriangleAlert } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, peekCache } from "@/lib/api";
 import { categoryIcon } from "@/lib/categoryIcons";
 import { useCurrency } from "@/lib/currency";
 import { currentMonthString, formatMonth, todayString } from "@/lib/format";
@@ -64,11 +64,21 @@ export default function BudgetsPage() {
   const [copying, setCopying] = useState(false);
 
   const load = useCallback(async () => {
+    const paths = [`/api/budgets?month=${month}`, `/api/budgets?month=${shiftMonth(month, -1)}`, `/api/dashboard?month=${month}`];
+    // Show the last known budgets at once, then the fresh ones
+    const cachedList = peekCache<Budget[]>(paths[0]);
+    const cachedPrevious = peekCache<Budget[]>(paths[1]);
+    const cachedDashboard = peekCache<DashboardData>(paths[2]);
+    if (cachedList && cachedPrevious && cachedDashboard) {
+      setBudgets(cachedList.data);
+      setPreviousCount(cachedPrevious.data.length);
+      setSpending(cachedDashboard.data.spending_by_category);
+    }
     try {
       const [list, previous, dashboard] = await Promise.all([
-        api<Budget[]>(`/api/budgets?month=${month}`),
-        api<Budget[]>(`/api/budgets?month=${shiftMonth(month, -1)}`),
-        api<DashboardData>(`/api/dashboard?month=${month}`),
+        api<Budget[]>(paths[0]),
+        api<Budget[]>(paths[1]),
+        api<DashboardData>(paths[2]),
       ]);
       setBudgets(list);
       setPreviousCount(previous.length);

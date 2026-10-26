@@ -10,8 +10,21 @@ export class ApiError extends Error {
   }
 }
 
+// Last answer of each GET request. A page opened again shows it at once while fresh data loads.
+// Any change (POST, PATCH, PUT, DELETE) empties it, and so do login and logout.
+const responseCache = new Map<string, unknown>();
+
+export function peekCache<T>(path: string): { data: T } | undefined {
+  return responseCache.has(path) ? { data: responseCache.get(path) as T } : undefined;
+}
+
+export function clearApiCache() {
+  responseCache.clear();
+}
+
 // Calls the Express backend and throws an ApiError with the backend message on failure
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = (options.method ?? "GET").toUpperCase();
   // For file uploads (FormData) the browser sets the Content-Type itself
   const isForm = options.body instanceof FormData;
   let response: Response;
@@ -26,6 +39,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw new ApiError("Can't reach the server. Check your connection and that the backend is running.", 0);
   }
 
+  // Something changed: cached pages could be out of date (chat messages don't change other pages)
+  if (response.ok && method !== "GET" && !path.startsWith("/api/chat")) responseCache.clear();
+
   if (response.status === 204) return undefined as T;
 
   const data = await response.json().catch(() => null);
@@ -36,5 +52,6 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     }
     throw new ApiError(data?.error || "Request failed", response.status);
   }
+  if (method === "GET") responseCache.set(path, data);
   return data as T;
 }

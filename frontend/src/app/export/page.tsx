@@ -170,7 +170,7 @@ export default function ExportPage() {
     try {
       const report = await api<Report | null>(`/api/reports/${month}`);
       if (!report) return toast.error(t("This report is no longer available."));
-      downloadReportPdf(report, money);
+      await downloadReportPdf(report, money);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

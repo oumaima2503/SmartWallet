@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf";
 import { formatDate, formatMonth } from "@/lib/format";
 import { Report } from "@/types/reports";
 
@@ -39,7 +38,9 @@ function clean(text: string) {
     .replace(/[^\x00-\xff]/g, "");
 }
 
-export function downloadReportPdf(report: Report, money: (amountMad: number) => string) {
+// jsPDF is big: it is loaded only when a PDF is downloaded, so the pages open faster
+export async function downloadReportPdf(report: Report, money: (amountMad: number) => string) {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();

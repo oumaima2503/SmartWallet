@@ -18,7 +18,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, peekCache } from "@/lib/api";
 import { transactionsExcel } from "@/lib/excelExport";
 import { categoryIcon } from "@/lib/categoryIcons";
 import { useCurrency } from "@/lib/currency";
@@ -126,11 +126,17 @@ export default function TransactionsPage() {
     if (categoryId) params.set("category_id", categoryId);
     if (search) params.set("search", search);
 
+    const listPath = `/api/transactions?${params}`;
+    const summaryPath = allTime ? "/api/transactions/summary" : `/api/transactions/summary?month=${month}`;
+    // Show the last known list at once, then the fresh one
+    const cachedList = peekCache<Transaction[]>(listPath);
+    const cachedSummary = peekCache<TransactionSummary>(summaryPath);
+    if (cachedList && cachedSummary) {
+      setTransactions(cachedList.data);
+      setSummary(cachedSummary.data);
+    }
     try {
-      const [list, totals] = await Promise.all([
-        api<Transaction[]>(`/api/transactions?${params}`),
-        api<TransactionSummary>(allTime ? "/api/transactions/summary" : `/api/transactions/summary?month=${month}`),
-      ]);
+      const [list, totals] = await Promise.all([api<Transaction[]>(listPath), api<TransactionSummary>(summaryPath)]);
       setTransactions(list);
       setSummary(totals);
       setError("");

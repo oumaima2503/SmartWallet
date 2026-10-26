@@ -35,6 +35,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [status, isPublic, pathname, router]);
 
+  // Development only: `next dev` compiles a page the first time it is opened (several seconds).
+  // After login, ask the dev server for every page in the background so the first click is fast.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || status !== "authenticated") return;
+    const pages = ["/", "/transactions", "/budgets", "/goals", "/reports", "/receipts", "/export", "/profile"];
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      for (const page of pages) {
+        if (cancelled) return;
+        // One at a time, so the page you are using stays fast
+        await fetch(page, { headers: { RSC: "1" } }).catch(() => undefined);
+      }
+    }, 2000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [status]);
+
   // Login and register pages: full screen, no sidebar
   if (isPublic) {
     return status === "authenticated" ? <SplashScreen /> : <>{children}</>;
