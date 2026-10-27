@@ -20,6 +20,30 @@ function currentMonth() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Income and expenses of the 6 months ending with monthStart (months without data count as 0)
+function trendQuery(userId: number, monthStart: string) {
+  return pool.query(
+    `SELECT to_char(m, 'YYYY-MM') AS month,
+       COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'income'), 0)::float AS income,
+       COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'expense'), 0)::float AS expenses
+     FROM generate_series($2::date - INTERVAL '${TREND_MONTHS - 1} months', $2::date, INTERVAL '1 month') AS m
+     LEFT JOIN transactions t ON t.user_id = $1 AND t.date >= m AND t.date < m + INTERVAL '1 month'
+     GROUP BY m ORDER BY m`,
+    [userId, monthStart]
+  );
+}
+
+// GET /api/dashboard/trend?end=YYYY-MM - the 6 months ending with "end", to browse older months in the chart
+export async function getTrend(req: Request, res: Response) {
+  const end = typeof req.query.end === "string" ? req.query.end : currentMonth();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(end)) {
+    return res.status(400).json({ error: "Month must use the format YYYY-MM" });
+  }
+  if (end > currentMonth()) return res.status(400).json({ error: "You can't view future months" });
+  const result = await trendQuery(req.userId!, `${end}-01`);
+  res.json(result.rows);
+}
+
 // GET /api/dashboard?month=YYYY-MM (defaults to the current month)
 // All numbers are calculated here from recorded transactions.
 export async function getDashboard(req: Request, res: Response) {
@@ -55,15 +79,7 @@ export async function getDashboard(req: Request, res: Response) {
       [userId, monthStart]
     ),
 
-    pool.query(
-      `SELECT to_char(m, 'YYYY-MM') AS month,
-         COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'income'), 0)::float AS income,
-         COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'expense'), 0)::float AS expenses
-       FROM generate_series($2::date - INTERVAL '${TREND_MONTHS - 1} months', $2::date, INTERVAL '1 month') AS m
-       LEFT JOIN transactions t ON t.user_id = $1 AND t.date >= m AND t.date < m + INTERVAL '1 month'
-       GROUP BY m ORDER BY m`,
-      [userId, monthStart]
-    ),
+    trendQuery(userId, monthStart),
 
     // The overall budget (no category) counts every expense; a category budget only its category
     pool.query(

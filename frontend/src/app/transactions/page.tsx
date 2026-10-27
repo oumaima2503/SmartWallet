@@ -12,7 +12,7 @@ import {
   Receipt,
   ScanLine,
   Search,
-  Settings2,
+  Tags,
   ShoppingBag,
   Store,
   Trash2,
@@ -117,6 +117,14 @@ export default function TransactionsPage() {
   const [error, setError] = useState("");
   const [modal, setModal] = useState<"add" | "categories" | Transaction | null>(null);
 
+  // Links from the dashboard: /transactions?category=3&month=2026-10
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromLink = { month: params.get("month"), category: params.get("category") };
+    if (fromLink.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(fromLink.month)) setMonth(fromLink.month);
+    if (fromLink.category && /^\d+$/.test(fromLink.category)) setCategoryId(fromLink.category);
+  }, []);
+
   // Wait until the user stops typing before searching
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
@@ -165,6 +173,14 @@ export default function TransactionsPage() {
   useEffect(() => {
     loadCategories().catch(() => toast.error(t("Could not load your categories.")));
   }, [loadCategories, toast]);
+
+  // From the transaction form: create the category, refresh the list and give it back so it gets selected
+  async function createCategory(name: string, categoryType: "income" | "expense") {
+    const created = await api<Category>("/api/categories", { method: "POST", body: JSON.stringify({ name, type: categoryType }) });
+    await loadCategories();
+    toast.success(t('Category "{name}" added.', { name }));
+    return created;
+  }
 
   useEffect(() => {
     loadTransactions();
@@ -268,8 +284,16 @@ export default function TransactionsPage() {
         >
           {t("All time")}
         </button>
-        <Button size="xs" variant="secondary" onClick={() => setModal("categories")} aria-label={t("Manage categories")} title={t("Categories")}>
-          <Settings2 size={14} />
+        <Button
+          size="xs"
+          variant="secondary"
+          onClick={() => setModal("categories")}
+          data-tour="tx-categories"
+          aria-label={t("Manage categories")}
+          title={t("Manage categories")}
+        >
+          <Tags size={14} />
+          <span className="hidden sm:inline">{t("Categories")}</span>
         </Button>
         <Link
           href="/receipts"
@@ -579,7 +603,13 @@ export default function TransactionsPage() {
       </section>
 
       <Modal open={modal === "add"} title={t("New transaction")} onClose={() => setModal(null)}>
-        <TransactionForm categories={categories} submitLabel="Add transaction" onSubmit={create} onCancel={() => setModal(null)} />
+        <TransactionForm
+          categories={categories}
+          submitLabel={t("Add transaction")}
+          onCreateCategory={createCategory}
+          onSubmit={create}
+          onCancel={() => setModal(null)}
+        />
       </Modal>
 
       <Modal open={!!editing} title={t("Edit transaction")} onClose={() => setModal(null)}>
@@ -589,7 +619,8 @@ export default function TransactionsPage() {
               key={editing.id}
               categories={categories}
               initial={editing}
-              submitLabel="Save changes"
+              submitLabel={t("Save changes")}
+              onCreateCategory={createCategory}
               onSubmit={(values) => update(editing.id, values)}
               onCancel={() => setModal(null)}
             />

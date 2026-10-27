@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CircleAlert, Copy, Pencil, PiggyBank, Plus, Target, Trash2, TriangleAlert } from "lucide-react";
+import { CircleAlert, Copy, Pencil, PiggyBank, Plus, Tags, Target, Trash2, TriangleAlert } from "lucide-react";
 import { api, peekCache } from "@/lib/api";
 import { categoryIcon } from "@/lib/categoryIcons";
 import { useCurrency } from "@/lib/currency";
@@ -16,6 +16,7 @@ import { useFeedback } from "@/components/ui/Feedback";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import MonthPicker from "@/components/dashboard/MonthPicker";
 import BudgetForm, { BudgetFormValues } from "@/components/budgets/BudgetForm";
+import CategoriesManager from "@/components/transactions/CategoriesManager";
 import Hero from "@/components/ui/Hero";
 import Amount from "@/components/ui/Amount";
 import { t } from "@/lib/i18n";
@@ -61,6 +62,7 @@ export default function BudgetsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [modal, setModal] = useState<ModalState>(null);
+  const [managingCategories, setManagingCategories] = useState(false);
   const [copying, setCopying] = useState(false);
 
   const load = useCallback(async () => {
@@ -94,11 +96,21 @@ export default function BudgetsPage() {
     load();
   }, [load]);
 
+  const loadCategories = useCallback(async () => {
+    setCategories(await api<Category[]>("/api/categories?type=expense"));
+  }, []);
+
   useEffect(() => {
-    api<Category[]>("/api/categories?type=expense")
-      .then(setCategories)
-      .catch(() => toast.error(t("Could not load your categories.")));
-  }, [toast]);
+    loadCategories().catch(() => toast.error(t("Could not load your categories.")));
+  }, [loadCategories, toast]);
+
+  // From the budget form: create the category, refresh the list and give it back so it gets selected
+  async function createCategory(name: string) {
+    const created = await api<Category>("/api/categories", { method: "POST", body: JSON.stringify({ name, type: "expense" }) });
+    await loadCategories();
+    toast.success(t('Category "{name}" added.', { name }));
+    return created;
+  }
 
   const overall = budgets?.find((b) => b.category_id === null) ?? null;
   const categoryBudgets = budgets?.filter((b) => b.category_id !== null) ?? [];
@@ -161,6 +173,18 @@ export default function BudgetsPage() {
     <main className="page">
       <PageHeader title={t("Budgets")} subtitle={t("Set monthly limits and see how much is left.")}>
         <MonthPicker value={month} onChange={setMonth} compact />
+        <Button
+          size="xs"
+          variant="secondary"
+          onClick={() => setManagingCategories(true)}
+          data-tour="budget-categories"
+          className="shrink-0"
+          aria-label={t("Manage categories")}
+          title={t("Manage categories")}
+        >
+          <Tags size={14} />
+          <span className="hidden sm:inline">{t("Categories")}</span>
+        </Button>
         <Button size="xs" onClick={() => setModal({ mode: "add" })} className="shrink-0" data-tour="budget-add">
           <Plus size={14} />
           <span className="hidden sm:inline">{t("New budget")}</span>
@@ -324,10 +348,20 @@ export default function BudgetsPage() {
             }
             preset={modal.mode === "add" && modal.preset?.amount_limit ? modal.preset : undefined}
             submitLabel={modal.mode === "edit" ? t("Save changes") : t("Create budget")}
+            onCreateCategory={createCategory}
             onSubmit={save}
             onCancel={() => setModal(null)}
           />
         )}
+      </Modal>
+
+      <Modal
+        open={managingCategories}
+        title={t("Expense categories")}
+        description={t("Default categories are always there. Add your own for anything else.")}
+        onClose={() => setManagingCategories(false)}
+      >
+        <CategoriesManager categories={categories} onChange={loadCategories} only="expense" />
       </Modal>
     </main>
   );

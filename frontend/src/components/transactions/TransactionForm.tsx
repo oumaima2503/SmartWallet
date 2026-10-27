@@ -10,18 +10,21 @@ import { todayString } from "@/lib/format";
 import { Category } from "@/types/receipts";
 import { Transaction, TransactionInput, TransactionType } from "@/types/transactions";
 import { t } from "@/lib/i18n";
+import NewCategoryInline from "./NewCategoryInline";
 
 type Props = {
   categories: Category[];
   initial?: Transaction;
   submitLabel: string;
+  // Creates a category (income or expense) and returns it; it is then selected
+  onCreateCategory?: (name: string, type: TransactionType) => Promise<Category>;
   onSubmit: (values: TransactionInput) => Promise<void>;
   onCancel: () => void;
 };
 
 type Errors = Partial<Record<"amount" | "date" | "category" | "form", string>>;
 
-export default function TransactionForm({ categories, initial, submitLabel, onSubmit, onCancel }: Props) {
+export default function TransactionForm({ categories, initial, submitLabel, onCreateCategory, onSubmit, onCancel }: Props) {
   const { convert, toBase, symbol } = useCurrency();
   // Amounts are typed in the chosen currency and saved in MAD
   const initialShown = initial ? String(Math.round(convert(Number(initial.amount)) * 100) / 100) : "";
@@ -93,7 +96,7 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
             }`}
           >
             <Icon size={16} />
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -125,10 +128,24 @@ export default function TransactionForm({ categories, initial, submitLabel, onSu
         {options.map((category) => (
           <option key={category.id} value={category.id}>
             {t(category.name)}
-            {category.is_custom ? " (custom)" : ""}
+            {category.is_custom ? ` (${t("custom")})` : ""}
           </option>
         ))}
       </Select>
+
+      {onCreateCategory && (
+        <NewCategoryInline
+          // A new instance per type, so a half-typed name doesn't switch type
+          key={type}
+          type={type}
+          categories={categories}
+          onCreate={onCreateCategory}
+          onCreated={(category) => {
+            setCategoryId(String(category.id));
+            setErrors((old) => ({ ...old, category: undefined }));
+          }}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

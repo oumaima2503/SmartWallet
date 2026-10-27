@@ -8,6 +8,7 @@ import { useCurrency } from "@/lib/currency";
 import { formatMonth } from "@/lib/format";
 import { Category } from "@/types/receipts";
 import { t } from "@/lib/i18n";
+import NewCategoryInline from "@/components/transactions/NewCategoryInline";
 
 export type BudgetFormValues = { category_id: number | null; amount_limit: string };
 
@@ -21,6 +22,8 @@ type Props = {
   // Pre-filled values, e.g. from "Set budget" on an unbudgeted category
   preset?: { category_id: number | null; amount_limit: number };
   submitLabel: string;
+  // Creates an expense category and returns it (it is then selected)
+  onCreateCategory?: (name: string) => Promise<Category>;
   onSubmit: (values: BudgetFormValues) => Promise<void>;
   onCancel: () => void;
 };
@@ -35,6 +38,7 @@ export default function BudgetForm({
   initial,
   preset,
   submitLabel,
+  onCreateCategory,
   onSubmit,
   onCancel,
 }: Props) {
@@ -47,7 +51,6 @@ export default function BudgetForm({
   const [amount, setAmount] = useState(initialShown);
   const [errors, setErrors] = useState<{ amount?: string; scope?: string; form?: string }>({});
   const [saving, setSaving] = useState(false);
-
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const value = Number(amount);
@@ -82,7 +85,8 @@ export default function BudgetForm({
           {t("Choose...")}
         </option>
         <option value={OVERALL} disabled={hasOverall && initial?.category_id !== null}>
-          Overall monthly budget{hasOverall && initial?.category_id !== null ? " (already set)" : ""}
+          {t("Overall monthly budget")}
+          {hasOverall && initial?.category_id !== null ? ` (${t("already set")})` : ""}
         </option>
         <optgroup label={t("Category budget")}>
           {categories.map((category) => {
@@ -90,12 +94,21 @@ export default function BudgetForm({
             return (
               <option key={category.id} value={category.id} disabled={taken}>
                 {t(category.name)}
-                {taken ? " (already set)" : ""}
+                {taken ? ` (${t("already set")})` : ""}
               </option>
             );
           })}
         </optgroup>
       </Select>
+
+      {onCreateCategory && (
+        <NewCategoryInline
+          type="expense"
+          categories={categories}
+          onCreate={(name) => onCreateCategory(name)}
+          onCreated={(category) => setScope(String(category.id))}
+        />
+      )}
 
       <Field
         label={t("Limit for {month}", { month: formatMonth(month) })}

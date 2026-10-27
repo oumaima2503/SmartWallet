@@ -149,7 +149,7 @@ export default function DashboardPage() {
               <ExpensesChart trend={data.monthly_trend} selectedMonth={data.month} onSelectMonth={setMonth} />
             </div>
             <div className="min-w-0 xl:col-span-5">
-              <CategoryDonut categories={data.spending_by_category} total={data.totals.expenses} />
+              <CategoryDonut categories={data.spending_by_category} total={data.totals.expenses} month={data.month} budgets={data.budgets.categories} />
             </div>
           </div>
 

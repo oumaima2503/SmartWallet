@@ -40,15 +40,22 @@ const STEPS: Step[] = [
   { section: "Dashboard", route: "/", target: "nav-dashboard", title: "Your dashboard", text: "Your balance, income, expenses, budgets and goals for the month, all on one page." },
   { section: "Dashboard", route: "/", target: "dash-month", title: "Pick a month", text: "Open the calendar to see the numbers of any month." },
   { section: "Dashboard", route: "/", target: "dash-kpis", title: "Your month in numbers", text: "Balance, income, expenses and money saved, compared with last month." },
-  { section: "Dashboard", route: "/", target: "dash-charts", title: "Charts", text: "Income vs expenses over 6 months (tap a month to open it) and where your money goes by category." },
+  { section: "Dashboard", route: "/", target: "dash-charts", title: "Charts", text: "Income vs expenses over 6 months and where your money goes. Hover a month or a category to see its details, click it to open it." },
   { section: "Dashboard", route: "/", target: "dash-ai", title: "AI insights", text: "A short summary of your monthly AI report: what goes well and what to watch." },
 
   // Transactions
   { section: "Transactions", route: "/transactions", target: "nav-transactions", title: "Transactions", text: "Every income and expense you record is listed here." },
-  { section: "Transactions", route: "/transactions", target: "tx-add", title: "Add a transaction", text: "Add an income or an expense in a few seconds. The buttons next to it scan a receipt or manage your categories." },
+  { section: "Transactions", route: "/transactions", target: "tx-add", title: "Add a transaction", text: "Add an income or an expense in a few seconds, or scan a receipt with the button next to it." },
+  {
+    section: "Transactions",
+    route: "/transactions",
+    target: "tx-categories",
+    title: "Your own categories",
+    text: "Create, rename or delete your own categories, for expenses and for income. In the transaction form, \"+ New category\" adds one without leaving it.",
+  },
   { section: "Transactions", route: "/transactions", target: "tx-summary", title: "The period at a glance", text: "Your balance, biggest expense, top category and the store you visit most." },
   { section: "Transactions", route: "/transactions", target: "tx-calendar", optional: true, title: "Spending calendar", text: "Darker days are the days you spent the most. You also see your average per day and your no-spend days." },
-  { section: "Transactions", route: "/transactions", target: "tx-filters", title: "Search and filters", text: "Find any transaction by store or description, or filter by type and category." },
+  { section: "Transactions", route: "/transactions", target: "tx-filters", title: "Search and filters", text: "Find any transaction by store or description, or filter by type, category and dates." },
   { section: "Transactions", route: "/transactions", target: "tx-list", title: "Your timeline", text: "Transactions are grouped by week. Click a card to edit or delete it." },
 
   // Receipts
@@ -59,6 +66,13 @@ const STEPS: Step[] = [
   // Budgets
   { section: "Budgets", route: "/budgets", target: "nav-budgets", title: "Budgets", text: "Set a monthly limit, overall or per category. You get an alert at 80% and when you go over." },
   { section: "Budgets", route: "/budgets", target: "budget-add", title: "Create a budget", text: "Choose the month, then add an overall limit or a limit for one category." },
+  {
+    section: "Budgets",
+    route: "/budgets",
+    target: "budget-categories",
+    title: "Categories for your budgets",
+    text: "Need a limit for something new? Add an expense category here, or straight from the budget form with \"+ New expense category\".",
+  },
   { section: "Budgets", route: "/budgets", target: "budget-main", title: "Follow every limit", text: "Each ring shows how much of a budget is used. It turns orange at 80% and red when you go over." },
 
   // Goals

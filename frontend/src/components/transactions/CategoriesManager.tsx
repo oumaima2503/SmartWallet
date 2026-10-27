@@ -13,12 +13,14 @@ import { t } from "@/lib/i18n";
 type Props = {
   categories: Category[];
   onChange: () => Promise<void>;
+  // Show only one type, without the tabs (e.g. budgets only use expense categories)
+  only?: TransactionType;
 };
 
 // Default categories (read only) + the user's own categories (add, rename, delete)
-export default function CategoriesManager({ categories, onChange }: Props) {
+export default function CategoriesManager({ categories, onChange, only }: Props) {
   const { toast, confirm } = useFeedback();
-  const [tab, setTab] = useState<TransactionType>("expense");
+  const [tab, setTab] = useState<TransactionType>(only ?? "expense");
   const [newName, setNewName] = useState("");
   const [editing, setEditing] = useState<{ id: number; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -45,7 +47,7 @@ export default function CategoriesManager({ categories, onChange }: Props) {
     const name = newName.trim();
     if (!name) return;
     if (categories.some((c) => c.type === tab && c.name.toLowerCase() === name.toLowerCase())) {
-      return toast.error(`"${name}" already exists.`);
+      return toast.error(t('"{name}" already exists.', { name }));
     }
     const ok = await run(
       () => api("/api/categories", { method: "POST", body: JSON.stringify({ name, type: tab }) }),
@@ -59,7 +61,7 @@ export default function CategoriesManager({ categories, onChange }: Props) {
     if (!editing || !editing.name.trim()) return;
     const ok = await run(
       () => api(`/api/categories/${editing.id}`, { method: "PATCH", body: JSON.stringify({ name: editing.name.trim() }) }),
-      "Category renamed."
+      t("Category renamed.")
     );
     if (ok) setEditing(null);
   }
@@ -67,31 +69,33 @@ export default function CategoriesManager({ categories, onChange }: Props) {
   async function remove(category: Category) {
     const yes = await confirm({
       title: t("Delete \"{name}\"?", { name: category.name }),
-      message: "You can only delete a category that is not used by any transaction or budget.",
+      message: t("You can only delete a category that is not used by any transaction or budget."),
       confirmLabel: t("Delete"),
       danger: true,
     });
-    if (yes) await run(() => api(`/api/categories/${category.id}`, { method: "DELETE" }), "Category deleted.");
+    if (yes) await run(() => api(`/api/categories/${category.id}`, { method: "DELETE" }), t("Category deleted."));
   }
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1">
+      {!only && (
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1">
         {(["expense", "income"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setTab(type)}
             aria-pressed={tab === type}
-            className={`h-9 rounded-lg text-sm font-semibold capitalize transition ${
+            className={`h-9 rounded-lg text-sm font-semibold transition ${
               tab === type ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"
             }`}
           >
             {t(type === "income" ? "Income categories" : "Expense categories")}
           </button>
         ))}
-      </div>
+        </div>
+      )}
 
-      <ul className="thin-scroll mt-4 max-h-72 space-y-1 overflow-y-auto">
+      <ul className={`thin-scroll max-h-72 space-y-1 overflow-y-auto ${only ? "" : "mt-4"}`}>
         {list.map((category) => {
           const Icon = categoryIcon(category.name);
           const isEditing = editing?.id === category.id;
