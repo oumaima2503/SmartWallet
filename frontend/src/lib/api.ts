@@ -1,6 +1,8 @@
 
+// Development: the backend runs on its own port. Production (Vercel): leave NEXT_PUBLIC_API_URL unset,
+// the calls stay on the frontend's domain (/api/...) and next.config.ts forwards them to BACKEND_URL.
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000");
 
 export const AUTH_EXPIRED_EVENT = "smartwallet:auth-expired";
 

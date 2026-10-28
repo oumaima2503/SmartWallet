@@ -22,6 +22,10 @@ import authRouter from "./routes/auth";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Behind Render's proxy (and Vercel's when the frontend forwards /api): use the real visitor IP
+// for the login rate limit. TRUST_PROXY = number of proxies in front of the app (0 locally).
+app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 0));
+
 // Allowed frontend origins
 const allowedOrigins = (
   process.env.FRONTEND_URL || "http://localhost:3000"
