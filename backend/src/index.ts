@@ -2,7 +2,6 @@ import "dotenv/config";
 
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 
 import { pool } from "./db";
 
@@ -16,6 +15,7 @@ import transactionsRouter from "./routes/transactions";
 import budgetsRouter from "./routes/budgets";
 
 import { requireTrustedOrigin } from "./middleware/csrf";
+import { sessionMiddleware } from "./middleware/session";
 import { currencyRouter, usersRouter } from "./routes/users";
 import authRouter from "./routes/auth";
 import { keepAiServiceAwake } from "./services/aiService";
@@ -55,8 +55,8 @@ app.use(
 // 2. Parse JSON request bodies
 app.use(express.json());
 
-// 3. Parse incoming cookies
-app.use(cookieParser());
+// 3. Load the login session from the session cookie
+app.use(sessionMiddleware);
 
 // 4. Validate request origins BEFORE API routes
 app.use(requireTrustedOrigin);

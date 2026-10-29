@@ -27,32 +27,32 @@ export function clearApiCache() {
   responseCache.clear();
 }
 
-// Prevent several simultaneous refresh requests
-let refreshPromise: Promise<boolean> | null = null;
+// The login is a server session: the backend keeps it in PostgreSQL and the browser only has
+// an httpOnly cookie with its id. All tabs share that cookie, so there is nothing to renew here.
+// A BroadcastChannel tells the other tabs when the session is over (logout, expired).
+const authChannel =
+  typeof window !== "undefined" && typeof BroadcastChannel !== "undefined"
+    ? new BroadcastChannel("smartwallet-auth")
+    : null;
 
-async function refreshSession(): Promise<boolean> {
-  if (!refreshPromise) {
-    refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    })
-      .then((response) => response.ok)
-      .catch(() => false)
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-}
-
-function notifyAuthExpired() {
+function notifyAuthExpired(tellOtherTabs = true) {
   clearApiCache();
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
   }
+
+  if (tellOtherTabs) {
+    authChannel?.postMessage("logged-out");
+  }
 }
+
+// Another tab logged out or lost the session: do the same here
+authChannel?.addEventListener("message", (event) => {
+  if (event.data === "logged-out") {
+    notifyAuthExpired(false);
+  }
+});
 
 // Centralized authenticated API client
 export async function api<T>(
@@ -66,45 +66,31 @@ export async function api<T>(
 
   const isAuthEndpoint = path.startsWith("/api/auth/");
 
-  const requestOptions: RequestInit = {
-    ...options,
-    credentials: "include",
-    headers: {
-      ...(isForm ? {} : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
-  };
-
-  async function sendRequest(): Promise<Response> {
-    try {
-      return await fetch(`${API_URL}${path}`, requestOptions);
-    } catch {
-      throw new ApiError(
-        "Can't reach the server. Check your connection and that the backend is running.",
-        0
-      );
-    }
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        ...(isForm ? {} : { "Content-Type": "application/json" }),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the server. Check your connection and that the backend is running.",
+      0
+    );
   }
 
-  // If another request is refreshing, wait for it.
-  if (!isAuthEndpoint && refreshPromise) {
-    await refreshPromise;
+  // The session cookie is gone in this browser: the other tabs must log out too
+  if (path === "/api/auth/logout") {
+    authChannel?.postMessage("logged-out");
   }
 
-  let response = await sendRequest();
-
-  // Access token expired: attempt to renew the session.
+  // Session expired or logged out (a wrong password on /login is also a 401, but not a logout)
   if (response.status === 401 && !isAuthEndpoint) {
-    const refreshed = await refreshSession();
-
-    if (refreshed) {
-      // Retry original request once.
-      response = await sendRequest();
-    }
-
-    if (response.status === 401) {
-      notifyAuthExpired();
-    }
+    notifyAuthExpired();
   }
 
   // Clear GET cache after successful mutations

@@ -10,17 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- only a hash of the token is stored, never the token itself
-CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash VARCHAR(255) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
-  revoked_at TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+-- login sessions (express-session + connect-pg-simple): the browser only has the random sid in a cookie
+CREATE TABLE IF NOT EXISTS user_sessions (
+  sid VARCHAR PRIMARY KEY,
+  sess JSON NOT NULL,
+  expire TIMESTAMP(6) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS refresh_tokens_user ON refresh_tokens (user_id);
+CREATE INDEX IF NOT EXISTS user_sessions_expire ON user_sessions (expire);
 
 -- user_id NULL = default category shared by everyone
 CREATE TABLE IF NOT EXISTS categories (

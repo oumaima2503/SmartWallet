@@ -1,95 +1,18 @@
 
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { pool } from "../db";
+import { SESSION_COOKIE, sessionCookieOptions } from "../middleware/session";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  throw new Error("JWT_SECRET must contain at least 32 characters");
-}
-
-const ACCESS_MAX_AGE = 15 * 60 * 1000;
-const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-// Two requests of the same browser can refresh at the same time (several tabs, parallel API calls):
-// a token rotated less than this long ago is not treated as stolen.
-const REUSE_GRACE_MS = 10 * 1000;
-
-const cookieOptions = {
-  httpOnly: true as const,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const
-};
-
-function generateAccessToken(userId: number) {
-  return jwt.sign(
-    { userId },
-    JWT_SECRET!,
-    { expiresIn: Math.floor(ACCESS_MAX_AGE / 1000), algorithm: "HS256" }
-  );
-}
-
-function generateRefreshToken() {
-  return randomBytes(32).toString("base64url");
-}
-
-function hashToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
-}
-
-function setAccessCookie(res: Response, userId: number) {
-  res.cookie("access_token", generateAccessToken(userId), {
-    ...cookieOptions,
-    path: "/",
-    maxAge: ACCESS_MAX_AGE
+// Log the user in: a NEW session id (an id that existed before login can't be reused), saved in PostgreSQL
+function startSession(req: Request, userId: number) {
+  return new Promise<void>((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error) return reject(error);
+      req.session.userId = userId;
+      req.session.save((saveError) => (saveError ? reject(saveError) : resolve()));
+    });
   });
-}
-
-function setRefreshCookie(
-  res: Response,
-  token: string,
-  remainingMs: number
-) {
-  res.cookie("refresh_token", token, {
-    ...cookieOptions,
-    path: "/api/auth",
-    maxAge: remainingMs
-  });
-}
-
-function clearAuthCookies(res: Response) {
-  res.clearCookie("access_token", {
-    ...cookieOptions,
-    path: "/"
-  });
-
-  res.clearCookie("refresh_token", {
-    ...cookieOptions,
-    path: "/api/auth"
-  });
-}
-
-async function createSession(userId: number, res: Response) {
-  const refreshToken = generateRefreshToken();
-  const familyId = randomUUID();
-  const expiresAt = new Date(Date.now() + REFRESH_MAX_AGE);
-
-  await pool.query(
-    `INSERT INTO refresh_tokens
-       (user_id, token_hash, family_id, expires_at)
-     VALUES ($1, $2, $3, $4)`,
-    [
-      userId,
-      hashToken(refreshToken),
-      familyId,
-      expiresAt
-    ]
-  );
-
-  setAccessCookie(res, userId);
-  setRefreshCookie(res, refreshToken, REFRESH_MAX_AGE);
 }
 
 // POST /api/auth/register
@@ -124,7 +47,7 @@ export async function register(req: Request, res: Response) {
 
     const user = result.rows[0];
 
-    await createSession(user.id, res);
+    await startSession(req, user.id);
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -176,7 +99,7 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    await createSession(user.id, res);
+    await startSession(req, user.id);
 
     return res.status(200).json({
       message: "Login successful",
@@ -196,170 +119,22 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-// POST /api/auth/refresh
-export async function refresh(req: Request, res: Response) {
-  const token = req.cookies?.refresh_token;
-
-  if (typeof token !== "string" || !token) {
-    return res.status(401).json({
-      error: "Refresh token required"
-    });
-  }
-
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // Lock the token record to prevent concurrent rotation.
-    const result = await client.query(
-      `SELECT id, user_id, family_id, expires_at, revoked_at
-       FROM refresh_tokens
-       WHERE token_hash = $1
-       FOR UPDATE`,
-      [hashToken(token)]
-    );
-
-    const session = result.rows[0];
-
-    if (!session) {
-      await client.query("ROLLBACK");
-      clearAuthCookies(res);
-      return res.status(401).json({
-        error: "Invalid refresh token"
-      });
-    }
-
-    // A previously rotated token was presented again.
-    if (session.revoked_at !== null) {
-      // Same browser racing with itself (rotated a few seconds ago, session still active):
-      // give a new access token and keep the session. The refresh cookie from the other request stays.
-      // Compared in the database: revoked_at has no time zone, the database clock is the reference
-      const recent = await client.query(
-        `SELECT 1 FROM refresh_tokens
-         WHERE id = $1 AND revoked_at > NOW() - make_interval(secs => $2)
-           AND EXISTS (
-             SELECT 1 FROM refresh_tokens
-             WHERE family_id = $3 AND revoked_at IS NULL AND expires_at > NOW()
-           )`,
-        [session.id, REUSE_GRACE_MS / 1000, session.family_id]
-      );
-      if (recent.rowCount) {
-        await client.query("COMMIT");
-        setAccessCookie(res, session.user_id);
-        return res.status(200).json({ message: "Session refreshed" });
-      }
-
-      // Otherwise it may be a stolen token: revoke the entire login session.
-      await client.query(
-        `UPDATE refresh_tokens
-         SET revoked_at = COALESCE(revoked_at, NOW())
-         WHERE family_id = $1`,
-        [session.family_id]
-      );
-
-      await client.query("COMMIT");
-      clearAuthCookies(res);
-
-      return res.status(401).json({
-        error: "Refresh session revoked"
-      });
-    }
-
-    const remainingMs =
-      new Date(session.expires_at).getTime() - Date.now();
-
-    if (remainingMs <= 0) {
-      await client.query(
-        `UPDATE refresh_tokens
-         SET revoked_at = NOW()
-         WHERE id = $1`,
-        [session.id]
-      );
-
-      await client.query("COMMIT");
-      clearAuthCookies(res);
-
-      return res.status(401).json({
-        error: "Refresh session expired"
-      });
-    }
-
-    // Revoke the old refresh token.
-    await client.query(
-      `UPDATE refresh_tokens
-       SET revoked_at = NOW()
-       WHERE id = $1`,
-      [session.id]
-    );
-
-    const newRefreshToken = generateRefreshToken();
-
-    // The replacement keeps the original session expiry.
-    await client.query(
-      `INSERT INTO refresh_tokens
-         (user_id, token_hash, family_id, expires_at)
-       VALUES ($1, $2, $3, $4)`,
-      [
-        session.user_id,
-        hashToken(newRefreshToken),
-        session.family_id,
-        session.expires_at
-      ]
-    );
-
-    await client.query("COMMIT");
-
-    setAccessCookie(res, session.user_id);
-    setRefreshCookie(res, newRefreshToken, remainingMs);
-
-    return res.status(200).json({
-      message: "Session refreshed"
-    });
-
-  } catch (error) {
-    try {
-      await client.query("ROLLBACK");
-    } catch {}
-
-    console.error("Refresh error:", error);
-
-    return res.status(500).json({
-      error: "Internal server error"
-    });
-  } finally {
-    client.release();
-  }
-}
-
 // POST /api/auth/logout
 export async function logout(req: Request, res: Response) {
-  try {
-    const token = req.cookies?.refresh_token;
+  // The session row is deleted: the cookie is worthless now, in every tab
+  req.session.destroy((error) => {
+    if (error) {
+      console.error("Logout error:", error);
 
-    if (typeof token === "string" && token) {
-      await pool.query(
-        `UPDATE refresh_tokens
-         SET revoked_at = COALESCE(revoked_at, NOW())
-         WHERE family_id = (
-           SELECT family_id
-           FROM refresh_tokens
-           WHERE token_hash = $1
-         )`,
-        [hashToken(token)]
-      );
+      return res.status(500).json({
+        error: "Internal server error"
+      });
     }
 
-    clearAuthCookies(res);
+    res.clearCookie(SESSION_COOKIE, sessionCookieOptions);
 
     return res.status(200).json({
       message: "Logout successful"
     });
-  } catch (error) {
-    console.error("Logout error:", error);
-
-    return res.status(500).json({
-      error: "Internal server error"
-    });
-  }
+  });
 }

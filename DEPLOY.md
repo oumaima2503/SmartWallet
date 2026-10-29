@@ -61,7 +61,7 @@ Environment variables (do not set `PORT`, Render sets it):
 |---|---|
 | `NODE_ENV` | `production` |
 | `DATABASE_URL` | the Neon connection string |
-| `JWT_SECRET` | a new long random string |
+| `SESSION_SECRET` | a new long random string (signs the login session cookie; the old `JWT_SECRET` still works) |
 | `INTERNAL_API_KEY` | the same value as in the AI service |
 | `AI_SERVICE_URL` | `https://smartwallet-ai.onrender.com` |
 | `FRONTEND_URL` | the Vercel address (step 4), no slash at the end |
