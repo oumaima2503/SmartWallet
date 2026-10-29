@@ -41,6 +41,16 @@ def generate_json(prompt: str, schema: type[BaseModel], system_instruction: str,
 # ---------- Groq (OpenAI-compatible API) ----------
 
 def _groq(prompt, schema, system_instruction, image):
+    # The model sometimes returns a badly formatted answer: one more try usually fixes it
+    try:
+        return _groq_once(prompt, schema, system_instruction, image)
+    except AIServiceError as error:
+        if error.status != 502:
+            raise
+        return _groq_once(prompt, schema, system_instruction, image)
+
+
+def _groq_once(prompt, schema, system_instruction, image):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise AIServiceError("GROQ_API_KEY is not set in ai-service/.env", status=503)
@@ -90,10 +100,10 @@ def _groq(prompt, schema, system_instruction, image):
             message = f"Groq request failed: {detail or response.status_code}"
         raise AIServiceError(message, status=503)
 
-    text = response.json()["choices"][0]["message"]["content"]
     try:
+        text = response.json()["choices"][0]["message"]["content"] or ""
         return schema.model_validate_json(text)
-    except ValidationError as error:
+    except (ValidationError, ValueError, KeyError, IndexError, TypeError) as error:
         raise AIServiceError("The AI returned a response that does not match the expected format") from error
 
 

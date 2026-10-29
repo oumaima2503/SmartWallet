@@ -18,6 +18,7 @@ import budgetsRouter from "./routes/budgets";
 import { requireTrustedOrigin } from "./middleware/csrf";
 import { currencyRouter, usersRouter } from "./routes/users";
 import authRouter from "./routes/auth";
+import { keepAiServiceAwake } from "./services/aiService";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -119,4 +120,5 @@ app.use(
 // 9. Start server
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
+  keepAiServiceAwake();
 });
