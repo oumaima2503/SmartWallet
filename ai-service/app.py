@@ -22,8 +22,9 @@ CORS(app)
 # Only the Express backend may call this service (when INTERNAL_API_KEY is set)
 @app.before_request
 def check_internal_key():
-    expected = os.getenv("INTERNAL_API_KEY")
-    if expected and request.path != "/health" and request.headers.get("X-Internal-Key") != expected:
+    # strip(): a space or line break pasted into the hosting dashboard must not break the key
+    expected = (os.getenv("INTERNAL_API_KEY") or "").strip()
+    if expected and request.path != "/health" and (request.headers.get("X-Internal-Key") or "").strip() != expected:
         return jsonify({"error": "Unauthorized"}), 401
 
 

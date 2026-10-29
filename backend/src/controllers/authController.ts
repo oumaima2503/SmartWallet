@@ -11,8 +11,11 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
   throw new Error("JWT_SECRET must contain at least 32 characters");
 }
 
-const ACCESS_MAX_AGE = 30 * 1000;
+const ACCESS_MAX_AGE = 15 * 60 * 1000;
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+// Two requests of the same browser can refresh at the same time (several tabs, parallel API calls):
+// a token rotated less than this long ago is not treated as stolen.
+const REUSE_GRACE_MS = 10 * 1000;
 
 const cookieOptions = {
   httpOnly: true as const,
@@ -24,7 +27,7 @@ function generateAccessToken(userId: number) {
   return jwt.sign(
     { userId },
     JWT_SECRET!,
-    { expiresIn: "30s", algorithm: "HS256" }
+    { expiresIn: Math.floor(ACCESS_MAX_AGE / 1000), algorithm: "HS256" }
   );
 }
 
@@ -228,8 +231,26 @@ export async function refresh(req: Request, res: Response) {
     }
 
     // A previously rotated token was presented again.
-    // Revoke the entire login session.
     if (session.revoked_at !== null) {
+      // Same browser racing with itself (rotated a few seconds ago, session still active):
+      // give a new access token and keep the session. The refresh cookie from the other request stays.
+      // Compared in the database: revoked_at has no time zone, the database clock is the reference
+      const recent = await client.query(
+        `SELECT 1 FROM refresh_tokens
+         WHERE id = $1 AND revoked_at > NOW() - make_interval(secs => $2)
+           AND EXISTS (
+             SELECT 1 FROM refresh_tokens
+             WHERE family_id = $3 AND revoked_at IS NULL AND expires_at > NOW()
+           )`,
+        [session.id, REUSE_GRACE_MS / 1000, session.family_id]
+      );
+      if (recent.rowCount) {
+        await client.query("COMMIT");
+        setAccessCookie(res, session.user_id);
+        return res.status(200).json({ message: "Session refreshed" });
+      }
+
+      // Otherwise it may be a stolen token: revoke the entire login session.
       await client.query(
         `UPDATE refresh_tokens
          SET revoked_at = COALESCE(revoked_at, NOW())

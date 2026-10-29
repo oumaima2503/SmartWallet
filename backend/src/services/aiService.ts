@@ -14,7 +14,8 @@ export async function callAiService<T>(path: string, init: RequestInit): Promise
   try {
     response = await fetch(`${AI_SERVICE_URL}${path}`, {
       ...init,
-      headers: { ...init.headers, "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
+      // trim(): a space or line break pasted into the hosting dashboard must not break the key
+      headers: { ...init.headers, "X-Internal-Key": (process.env.INTERNAL_API_KEY || "").trim() },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch {
@@ -23,6 +24,10 @@ export async function callAiService<T>(path: string, init: RequestInit): Promise
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
+    // 401 = the two services don't share the same INTERNAL_API_KEY (a setup problem, not a bug)
+    if (response.status === 401) {
+      throw new AiServiceError("The AI service refused the backend: INTERNAL_API_KEY must be identical in both services", 503);
+    }
     throw new AiServiceError(data?.error || "The AI service returned an error", response.status === 503 ? 503 : 502);
   }
   return data as T;
